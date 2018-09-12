@@ -15,6 +15,17 @@ def truncate(f, n):
 
 class Board:
 	def __init__(self, size=5):
+		self.make_board_coordinates(size)
+		# E - Empty; BR; WR; BM; WM
+
+		self.state = {}
+		for k in self.points:
+			self.state[k] = 'E'
+
+		print(self.get_neighbours((0, 0)))
+
+
+	def make_board_coordinates(self, size):
 		points = {}
 
 		for n in range(size+1):
@@ -44,34 +55,35 @@ class Board:
 
 	def lines(self, point):
 		x1, y1 = self.points[point]
-		points = []
+		points = {}
 		for i in range(6):
+			points[i] = []
 			theta = (i*(pi/3)) + (pi/6)
 			for j in range(1, 11):
 				x2 = round(truncate(x1 + j*K*cos(theta), TRUNC), ROUND)
 				y2 = round(truncate(y1 + j*K*sin(theta), TRUNC), ROUND)
 
 				if (x2, y2) in self.points_inverse:
-					points.append((x2, y2))
-		xli = []
-		yli = []
-		for k in self.points:
-			xli.append(self.points[k][0])
-			yli.append(self.points[k][1])
-		x = np.array(xli)
-		y = np.array(yli)
-		plt.scatter(x, y)
+					points[i].append((x2, y2))
+		# xli = []
+		# yli = []
+		# for k in self.points:
+		# 	xli.append(self.points[k][0])
+		# 	yli.append(self.points[k][1])
+		# x = np.array(xli)
+		# y = np.array(yli)
+		# plt.scatter(x, y)
 		
-		xli = []
-		yli = []
-		for k in points:
-			xli.append(k[0])
-			yli.append(k[1])
-		x = np.array(xli)
-		y = np.array(yli)
-		plt.scatter(x, y, color='red')
-		plt.show()
-
+		# xli = []
+		# yli = []
+		# for k in points:
+		# 	xli.append(k[0])
+		# 	yli.append(k[1])
+		# x = np.array(xli)
+		# y = np.array(yli)
+		# plt.scatter(x, y, color='red')
+		# plt.show()
+		# print(points)
 		return points
 
 
@@ -97,3 +109,52 @@ class Board:
 		y = np.array(yli)
 		plt.scatter(x, y)
 		plt.show()
+
+
+	def get_neighbours(self, point):
+		points_to_go = []
+		points_in_lines = self.lines(point)
+
+		for key in points_in_lines:
+			marker_jump = 0
+			for p_inv in points_in_lines[key]:
+				p = self.points_inverse[p_inv]
+				if marker_jump == 0:
+					if self.state[p] is 'E':
+						points_to_go.append(p)
+					elif self.state[p] is 'BR' or self.state[p] is 'WR':
+						break
+					elif self.state[p] is 'WM' or self.state[p] is 'BM':
+						marker_jump += 1
+				elif marker_jump == 1:
+					if self.state[p] is 'E':
+						points_to_go.append(p)
+						break
+					elif self.state[p] is 'BR' or self.state[p] is 'WR':
+						break
+
+		print(points_to_go)
+
+		xli = []
+		yli = []
+		for k in self.points:
+			xli.append(self.points[k][0])
+			yli.append(self.points[k][1])
+		x = np.array(xli)
+		y = np.array(yli)
+		plt.scatter(x, y)
+		
+		xli = []
+		yli = []
+		for k in points_to_go:
+			xli.append(self.points[k][0])
+			yli.append(self.points[k][1])
+		x = np.array(xli)
+		y = np.array(yli)
+		plt.scatter(x, y, color='red')
+		plt.show()
+
+		return points_to_go
+
+if __name__ == '__main__':
+	b = Board()
