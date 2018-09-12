@@ -2,8 +2,8 @@ from math import cos, sin, pi, isclose
 import numpy as np
 import matplotlib.pyplot as plt
 K = 1
-ROUND = 4
-
+ROUND = 3
+TRUNC = 4
 def truncate(f, n):
     '''Truncates/pads a float f to n decimal places without rounding'''
     s = '{}'.format(f)
@@ -19,11 +19,11 @@ class Board:
 
 		for n in range(size+1):
 			if not n:
-				points[(0, 0)] = (0, 0)
+				points[(0.0, 0.0)] = (0.0, 0.0)
 			else:
 				for m in range(6):
-					y = n*K*(cos(m*(pi/3)))
-					x = n*K*(sin(m*(pi/3)))
+					y = round(truncate(n*K*(cos(m*(pi/3))), TRUNC), ROUND)
+					x = round(truncate(n*K*(sin(m*(pi/3))), TRUNC), ROUND)
 					points[(n, m*n)] = (x, y)
 
 		for key in range(2, size+1):
@@ -48,13 +48,11 @@ class Board:
 		for i in range(6):
 			theta = (i*(pi/3)) + (pi/6)
 			for j in range(1, 11):
-				x2 = x1 + j*K*cos(theta)
-				y2 = y1 + j*K*sin(theta)
-				for k in self.points_inverse:
-					if isclose(x2, k[0], rel_tol=1e-04) and isclose(y2, k[1], rel_tol=1e-04):
-						points.append((x2, y2))
-				# if (x2, y2) in self.points_inverse:
-				# 	points.append((x2, y2))
+				x2 = round(truncate(x1 + j*K*cos(theta), TRUNC), ROUND)
+				y2 = round(truncate(y1 + j*K*sin(theta), TRUNC), ROUND)
+
+				if (x2, y2) in self.points_inverse:
+					points.append((x2, y2))
 		xli = []
 		yli = []
 		for k in self.points:
