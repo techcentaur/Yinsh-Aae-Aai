@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 K = 1
 ROUND = 3
 TRUNC = 4
+
 def truncate(f, n):
     '''Truncates/pads a float f to n decimal places without rounding'''
     s = '{}'.format(f)
@@ -12,6 +13,20 @@ def truncate(f, n):
     i, p, d = s.partition('.')
     return float('.'.join([i, (d+'0'*n)[:n]]))
 
+
+def terminal_test(board, num_of_rings=5, remove_rings_to_win=3):
+	rings_player1 = 0 # Let white
+	rings_player2 = 0 # Let black
+
+	for (key, value) in board.state.items():
+		if value == 'WR':
+			rings_player1 += 1
+		elif value == 'BR':
+			rings_player2 += 1
+
+	if (rings_player1 <= 2) or (rings_player2 <= 2):
+		# Game should be over now
+		return True
 
 class Board:
 	def __init__(self, size=5):
@@ -65,25 +80,8 @@ class Board:
 
 				if (x2, y2) in self.points_inverse:
 					points[i].append((x2, y2))
-		# xli = []
-		# yli = []
-		# for k in self.points:
-		# 	xli.append(self.points[k][0])
-		# 	yli.append(self.points[k][1])
-		# x = np.array(xli)
-		# y = np.array(yli)
-		# plt.scatter(x, y)
-		
-		# xli = []
-		# yli = []
-		# for k in points:
-		# 	xli.append(k[0])
-		# 	yli.append(k[1])
-		# x = np.array(xli)
-		# y = np.array(yli)
-		# plt.scatter(x, y, color='red')
-		# plt.show()
-		# print(points)
+
+		# points = {'0':[()], '1': [()] ...}			
 		return points
 
 
@@ -112,49 +110,47 @@ class Board:
 
 
 	def get_neighbours(self, point):
-		points_to_go = []
+		points_to_go = {}
 		points_in_lines = self.lines(point)
+		# points_in_lines = {'0':[(1.2343, 2.00)], '1': [()] ...}
 
 		for key in points_in_lines:
+			points_to_go[key] = []
+
 			marker_jump = 0
 			for p_inv in points_in_lines[key]:
 				p = self.points_inverse[p_inv]
 				if marker_jump == 0:
 					if self.state[p] is 'E':
-						points_to_go.append(p)
+						points_to_go[key].append(p)
 					elif self.state[p] is 'BR' or self.state[p] is 'WR':
 						break
 					elif self.state[p] is 'WM' or self.state[p] is 'BM':
 						marker_jump += 1
 				elif marker_jump == 1:
 					if self.state[p] is 'E':
-						points_to_go.append(p)
+						points_to_go[key].append(p)
 						break
 					elif self.state[p] is 'BR' or self.state[p] is 'WR':
 						break
 
-		print(points_to_go)
+		# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
+		for key in points_in_lines:
+			for point in points_to_go[key]:
+				marker_change = []
+				for _point in points_in_lines[key]:
+					if point == _point:
+						# point_current is ring and will be marker
+						# _point is empty and will be ring
+						# flip the markers in the marker_change																						p
+						neighbour_boards.append(self.make_board(point, _point, marker_change))
+					else:
+						if self.state[_point] is 'E':
+							pass
+						else:
+							marker_change.append(_point)
 
-		xli = []
-		yli = []
-		for k in self.points:
-			xli.append(self.points[k][0])
-			yli.append(self.points[k][1])
-		x = np.array(xli)
-		y = np.array(yli)
-		plt.scatter(x, y)
-		
-		xli = []
-		yli = []
-		for k in points_to_go:
-			xli.append(self.points[k][0])
-			yli.append(self.points[k][1])
-		x = np.array(xli)
-		y = np.array(yli)
-		plt.scatter(x, y, color='red')
-		plt.show()
 
-		return points_to_go
 
 if __name__ == '__main__':
 	b = Board()

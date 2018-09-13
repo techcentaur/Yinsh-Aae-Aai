@@ -1,22 +1,26 @@
 import sys
-	
+from utility import func
+
 class Algo:
 	def __init__(self):
 		pass
 
-	def min_max(board):
+	def min_max(self, board):
 		alpha_init = sys.float_info.min
 		beta_init = sys.float_info.max
-		value = max_value(board, alpha_init, beta_init)
+		
+		value = self.max_value(board, alpha_init, beta_init)
+		
+		# return the action ofwhose state value has been selected
 		for state in board.get_neighbours():
-			if utility_function(state) == value:
+			if utility.func(state) == value:
 				return state
 
-		return {'Error': 'Hypothetical State'}
+		return False
 
-	def max_value(board, alpha, beta):
+	def max_value(self, board, alpha, beta):
 		if terminal_test(board):
-			return utility_function(board)
+			return utility.func(board)
 		
 		for state in board.get_neighbours():
 			child_value = self.min_value(board, alpha, beta)
@@ -26,9 +30,9 @@ class Algo:
 
 		return alpha
 
-	def min_value(board, alpha, beta):
+	def min_value(self, board, alpha, beta):
 		if terminal_test(board):
-			return utility_function(board)
+			return utility.func(board)
 
 		for state in board.get_neighbours():
 			child_value = self.max_value(board, alpha, beta)
