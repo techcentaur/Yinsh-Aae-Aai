@@ -2,12 +2,9 @@
 ## Make a function
 ## Change coefficient and evaluate board
 
-def func(board):
-	# constant equations of the board
-	equations = board.get_equations()
 
-	for eq in equations:
-		good_markers, bad_markers = board.get_markers_in_equation(eq)
+def function(board, relative=False):
+	if not relative:		
 
 		# If our player markers >= 5; and last game
 		if good_markers >= 5 and bad_markers >= 5 and board.removed_rings == 2:

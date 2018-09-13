@@ -1,3 +1,4 @@
+import gc
 import sys
 from utility import func
 
@@ -6,14 +7,22 @@ class Algo:
 		pass
 
 	def min_max(self, board):
+		self.depth = 0
 		alpha_init = sys.float_info.min
 		beta_init = sys.float_info.max
-		
-		self.depth = 0
+	
+		child_val = self.max_value(board, alpha_init, beta_init)
+		gc.collect() # collect garbage here
 
-		child_board = self.max_value(board, alpha_init, beta_init)
+		try:
+			for b in board.get_neighbours():
+				if utility.func(b) == child_val:
+					return b
 		
-		return child_board
+		except Exception as e:
+			print("[*] Value not found in neighbours!")
+			raise ValueError
+
 
 	def terminal_test(self):
 		return self.depth >= 6
@@ -23,27 +32,33 @@ class Algo:
 			return utility.func(board)
 		
 		self.depth += 1
-		for b in board.get_neighbours():
+
+		neighbs = board.get_neighbours()
+		for b in neighbs:
 			child_value = self.min_value(b, alpha, beta)
 			alpha = min(alpha, child_value)
 
 			if alpha>=beta:
 				return child_value
 
-		# alpha is wrong -- will return some child
-		return alpha--
+		max_util =  max([utility.func(x) for x in neighbs])
+
+		return max_util
 
 	def min_value(self, board, alpha, beta):
 		if self.terminal_test():
 			return utility.func(board)
 
 		self.depth += 1
-		for b in board.get_neighbours():
+
+		neighbs = board.get_neighbours()
+		for b in neighbs:
 			child_value = self.max_value(b, alpha, beta)
 			beta = min(beta, child_value)
 
 			if alpha>=beta:
 				return child_value
 
-		# beta is wrong -- will return some child
-		return beta
+		min_util =  min([utility.func(x) for x in neighbs])
+
+		return min_util

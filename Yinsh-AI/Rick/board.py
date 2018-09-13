@@ -14,20 +14,6 @@ def truncate(f, n):
     return float('.'.join([i, (d+'0'*n)[:n]]))
 
 
-def terminal_test(board, num_of_rings=5, remove_rings_to_win=3):
-	rings_player1 = 0 # Let white
-	rings_player2 = 0 # Let black
-
-	for (key, value) in board.state.items():
-		if value == 'WR':
-			rings_player1 += 1
-		elif value == 'BR':
-			rings_player2 += 1
-
-	if (rings_player1 <= 2) or (rings_player2 <= 2):
-		# Game should be over now
-		return True
-
 class Board:
 	def __init__(self, size=5):
 		self.make_board_coordinates(size)
