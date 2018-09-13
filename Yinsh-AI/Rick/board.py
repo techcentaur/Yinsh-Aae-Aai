@@ -37,8 +37,6 @@ class Board:
 		for k in self.points:
 			self.state[k] = 'E'
 
-		print(self.get_neighbours((0, 0)))
-
 
 	def make_board_coordinates(self, size):
 		points = {}
@@ -114,6 +112,7 @@ class Board:
 		points_in_lines = self.lines(point)
 		# points_in_lines = {'0':[(1.2343, 2.00)], '1': [()] ...}
 
+		# See which positions it is possible to go
 		for key in points_in_lines:
 			points_to_go[key] = []
 
@@ -134,22 +133,42 @@ class Board:
 					elif self.state[p] is 'BR' or self.state[p] is 'WR':
 						break
 
+		neighbour_boards = []
 		# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
 		for key in points_in_lines:
-			for point in points_to_go[key]:
-				marker_change = []
-				for _point in points_in_lines[key]:
-					if point == _point:
+			for point1 in points_to_go[key]:
+				flip_markers = []
+				for point2 in points_in_lines[key]:
+					if point1 == point2:
 						# point_current is ring and will be marker
 						# _point is empty and will be ring
-						# flip the markers in the marker_change																						p
-						neighbour_boards.append(self.make_board(point, _point, marker_change))
+						# flip the markers in the flip_markers																						p
+						neighbour_boards.append(self.make_board(point, point2, flip_markers))
 					else:
-						if self.state[_point] is 'E':
+						if self.state[point2] is 'E':
 							pass
 						else:
-							marker_change.append(_point)
+							flip_markers.append(point2)
 
+		return neighbour_boards
+
+	def make_board(self, point_at_ring, point_to_go, flip_markers)
+		new_board = Board()
+		new_board.state = self.state
+		new_board.state[point_to_go] = self.state[point_at_ring]
+		
+		if self.state[point_at_ring] is 'WR':
+			new_board.state[point_at_ring] = 'WM'
+		else:
+			new_board.state[point_at_ring] = 'BM'
+
+		for mark in flip_markers:
+			if self.state[mark] is 'WM':
+				new_board.state[mark] = 'BM'
+			else:
+				new_board.state[mark] = 'WM'
+
+		return new_board
 
 
 if __name__ == '__main__':
