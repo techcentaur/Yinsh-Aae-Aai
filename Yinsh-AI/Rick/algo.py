@@ -9,35 +9,41 @@ class Algo:
 		alpha_init = sys.float_info.min
 		beta_init = sys.float_info.max
 		
-		value = self.max_value(board, alpha_init, beta_init)
-		
-		# return the action ofwhose state value has been selected
-		for state in board.get_neighbours():
-			if utility.func(state) == value:
-				return state
+		self.depth = 0
 
-		return False
+		child_board = self.max_value(board, alpha_init, beta_init)
+		
+		return child_board
+
+	def terminal_test(self):
+		return self.depth >= 6
 
 	def max_value(self, board, alpha, beta):
-		if terminal_test(board):
+		if self.terminal_test():
 			return utility.func(board)
 		
-		for state in board.get_neighbours():
-			child_value = self.min_value(board, alpha, beta)
+		self.depth += 1
+		for b in board.get_neighbours():
+			child_value = self.min_value(b, alpha, beta)
 			alpha = min(alpha, child_value)
+
 			if alpha>=beta:
 				return child_value
 
-		return alpha
+		# alpha is wrong -- will return some child
+		return alpha--
 
 	def min_value(self, board, alpha, beta):
-		if terminal_test(board):
+		if self.terminal_test():
 			return utility.func(board)
 
-		for state in board.get_neighbours():
-			child_value = self.max_value(board, alpha, beta)
+		self.depth += 1
+		for b in board.get_neighbours():
+			child_value = self.max_value(b, alpha, beta)
 			beta = min(beta, child_value)
+
 			if alpha>=beta:
 				return child_value
 
+		# beta is wrong -- will return some child
 		return beta
