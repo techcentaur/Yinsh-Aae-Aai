@@ -16,6 +16,7 @@ def truncate(f, n):
 
 class Board:
 	def __init__(self, size=5):
+		self.size = size
 		self.make_board_coordinates(size)
 		# E - Empty; BR; WR; BM; WM
 
@@ -64,12 +65,42 @@ class Board:
 
 				if (x2, y2) in self.points_inverse:
 					points[i].append((x2, y2))
-
-		# points = {'0':[()], '1': [()] ...}			
 		return points
 
 
+	def all_lines(self):
+		lines = []
+		for i in range(3):
+			angles = ((pi/2)-(i*(pi/3)), (pi/2)-((i+1)*(pi/3)))
+			for j in range(self.size):
+				if not j:
+					x1, y1 = self.points[(self.size-1, (i*(self.size-1))+j)]
+				else:
+					x1, y1 = self.points[(self.size, (i*(self.size))+j)]
+				for theta in angles:
+					line = []
+					line.append((x1, y1))
+					for k in range(1, 11):
+						x2 = round(truncate(x1 - k*K*cos(theta), TRUNC), ROUND)
+						y2 = round(truncate(y1 - k*K*sin(theta), TRUNC), ROUND)
+						if (x2, y2) in self.points_inverse:
+							line.append((x2, y2))
+					lines.append(line)
+				if not j:
+					del lines[-1]
+		return lines
+
+
 	def display_points(self, points):
+		xli = []
+		yli = []
+		for k in self.points:
+			xli.append(self.points[k][0])
+			yli.append(self.points[k][1])
+		x = np.array(xli)
+		y = np.array(yli)
+		plt.scatter(x, y)
+
 		xli = []
 		yli = []
 		for k in points:
@@ -77,8 +108,10 @@ class Board:
 			yli.append(k[1])
 		x = np.array(xli)
 		y = np.array(yli)
-		plt.scatter(x, y)
+		plt.scatter(x, y, color='red')
 		plt.show()
+
+
 
 
 	def display(self):
@@ -138,7 +171,7 @@ class Board:
 
 		return neighbour_boards
 
-	def make_board(self, point_at_ring, point_to_go, flip_markers)
+	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board()
 		new_board.state = self.state
 		new_board.state[point_to_go] = self.state[point_at_ring]
