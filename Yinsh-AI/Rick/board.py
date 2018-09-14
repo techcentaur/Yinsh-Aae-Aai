@@ -113,8 +113,6 @@ class Board:
 		plt.show()
 
 
-
-
 	def display(self):
 		xli = []
 		yli = []
@@ -172,6 +170,7 @@ class Board:
 
 		return neighbour_boards
 
+
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board()
 		new_board.state = self.state
@@ -190,6 +189,41 @@ class Board:
 
 		return new_board
 
+
+	def utility_function(self):
+		all_lines = self.all_lines()
+
+		player1_markers = 0
+		player2_markers = 0
+		player1_continous_flag = False
+		player2_continous_flag = False
+
+		for line in all_lines:
+			for point in line:
+				if self.state[point] is 'BM':
+					player1_markers += 1
+					player1_continous_flag = True
+					player2_continous_flag = False
+					if player1_markers >= 5 and player1_continous_flag:
+						# 5 continous markers in a row, instantly do this
+						break
+				elif self.state[point] is 'WM':
+					player2_markers += 1
+					player1_continous_flag = False
+					player2_continous_flag = True
+					if player2_markers >= 5 and player2_continous_flag:
+						# 5 continous markers in a row, never do this
+						break
+				else:
+					player1_continous_flag = False
+					player2_continous_flag = False
+
+
+		player1_markers = 0
+		player2_markers = 0
+
+		# for only vertical lines:
+		
 
 if __name__ == '__main__':
 	b = Board()
