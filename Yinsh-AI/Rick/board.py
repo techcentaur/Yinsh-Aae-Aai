@@ -77,6 +77,8 @@ class Board:
 				else:
 					x1, y1 = self.points[(self.size, (i*(self.size))+j)]
 				for theta in angles:
+					if not round(truncate(cos(theta), TRUNC), ROUND):
+						continue 
 					line = []
 					line.append((x1, y1))
 					for k in range(1, 11):
@@ -87,8 +89,27 @@ class Board:
 						else:
 							break
 					lines.append(line)
-				if not j:
+				if not j and i != 2:
 					del lines[-1]
+		for i in range(-self.size+1, self.size):
+			if i < 0:
+				i = (self.size*6 + i)
+			if not i:
+				x1, y1 = self.points[(self.size-1, 0)]
+			else:
+				x1, y1 = self.points[(self.size, i)]
+			line = []
+			line.append((x1, y1))
+			for k in range(1, 11):
+				x2 = x1
+				y2 = round(truncate(y1 - k*K, TRUNC), ROUND)
+				if (x2, y2) in self.points_inverse:
+					line.append((x2, y2))
+				else:
+					break
+			lines.append(line)
+		for i in range(6):
+			lines.append([self.points[(self.size, (self.size*i)+1+j)] for j in range(self.size-1)])
 		return lines
 
 
@@ -111,8 +132,6 @@ class Board:
 		y = np.array(yli)
 		plt.scatter(x, y, color='red')
 		plt.show()
-
-
 
 
 	def display(self):
