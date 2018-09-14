@@ -1,30 +1,15 @@
-## Utility Function - Learning and Evaluation
+## Utility Function: How to change - Learning and Evaluation
 ## Make a function
 ## Change coefficient and evaluate board
 
+# Utility func - How it should be? 
+# Change in number of markers in general
+# Change in number of markers in a particular line 
+# Cluttering? -- No
 
-def function(board, relative=False):
-	if not relative:		
+# Relative: difference between configs of board and its parent
+# Not relative: values based on the config of the board
 
-		# If our player markers >= 5; and last game
-		if good_markers >= 5 and bad_markers >= 5 and board.removed_rings == 2:
-			# last move
-			value += 20
-			flag = True
-			break
-		if good_markers >= 5 and bad_markers >= 5 and board.removed_rings < 2:
-			# good move and bad move
-			value += 6
-		if good_markers >= 5 and bad_markers < 5:
-			# very good move
-			value += 10
-		if bad_markers >=5 and good_markers < 5:
-			# very bad move
-			value += -10
-		if bad_markers < 5 and good_markers < 5:
-			value += (bad_markers * -1) + (good_markers * 1)
-
-	if flag:
-		return value
-
-	return value
+def function(board, parent_board=None, relative=False):
+	if not relative:
+		
