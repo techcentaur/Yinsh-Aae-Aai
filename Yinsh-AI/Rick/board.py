@@ -15,43 +15,40 @@ def truncate(f, n):
 
 
 class Board:
+	points = {}
+	size = 5
+
+	for n in range(size+1):
+		if not n:
+			points[(0.0, 0.0)] = (0.0, 0.0)
+		else:
+			for m in range(6):
+				y = round(truncate(n*K*(cos(m*(pi/3))), TRUNC), ROUND)
+				x = round(truncate(n*K*(sin(m*(pi/3))), TRUNC), ROUND)
+				points[(n, m*n)] = (x, y)
+
+	for key in range(2, size+1):
+		for i in range(6):
+			(x1, y1) = points[(key, i*key)]
+			(x2, y2) = points[(key, (((i+1)*key) % (key*6)))]
+
+			for t in range(1, key):
+				x = (x1*(key - t) + x2*t) / key
+				y = (y1*(key - t) + y2*t) / key
+
+				points[(key, key*i + t)] = (x, y)
+	for i in [(5, i*5) for i in range(6)]:
+		points.pop(i)
+	points = points
+	points_inverse = {v:k for k,v in points.items()}
+
 	def __init__(self, size=5):
 		self.size = size
-		self.make_board_coordinates(size)
 		# E - Empty; BR; WR; BM; WM
 
 		self.state = {}
 		for k in self.points:
 			self.state[k] = 'E'
-
-
-	def make_board_coordinates(self, size):
-		points = {}
-
-		for n in range(size+1):
-			if not n:
-				points[(0.0, 0.0)] = (0.0, 0.0)
-			else:
-				for m in range(6):
-					y = round(truncate(n*K*(cos(m*(pi/3))), TRUNC), ROUND)
-					x = round(truncate(n*K*(sin(m*(pi/3))), TRUNC), ROUND)
-					points[(n, m*n)] = (x, y)
-
-		for key in range(2, size+1):
-			for i in range(6):
-				(x1, y1) = points[(key, i*key)]
-				(x2, y2) = points[(key, (((i+1)*key) % (key*6)))]
-
-				for t in range(1, key):
-					x = (x1*(key - t) + x2*t) / key
-					y = (y1*(key - t) + y2*t) / key
-
-					points[(key, key*i + t)] = (x, y)
-		for i in [(size, i*size) for i in range(6)]:
-			points.pop(i)
-		self.points = points
-		self.points_inverse = {v:k for k,v in self.points.items()}
-
 
 	def lines(self, point):
 		x1, y1 = self.points[point]
@@ -65,6 +62,8 @@ class Board:
 
 				if (x2, y2) in self.points_inverse:
 					points[i].append((x2, y2))
+				else:
+					break
 		return points
 
 
@@ -85,6 +84,8 @@ class Board:
 						y2 = round(truncate(y1 - k*K*sin(theta), TRUNC), ROUND)
 						if (x2, y2) in self.points_inverse:
 							line.append((x2, y2))
+						else:
+							break
 					lines.append(line)
 				if not j:
 					del lines[-1]
