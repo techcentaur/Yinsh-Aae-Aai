@@ -157,10 +157,14 @@ class Board:
 		self.state[(3,8)] = 'BR'
 		self.state[(2,9)] = 'BR'
 		self.state[(3,13)] = 'BR'
-		self.state[(4,1)] = 'BR'
 		self.state[(4,7)] = 'BR'
 		self.state[(3,3)] = 'BM'
 		self.state[(4,3)] = 'WM'
+		self.state[(4,2)] = 'WM'
+		self.state[(4,1)] = 'WM'
+		self.state[(4,0)] = 'WM'
+		self.state[(5,29)] = 'WM'
+		self.state[(5,24)] = 'BM'
 
 		return True
 
@@ -189,7 +193,7 @@ class Board:
 		plt.scatter(np.array([x for (x,y) in WR]), np.array([y for (x,y) in WR]), color='blue')
 		plt.show()
 
-	def display_2(self, l, two=True):
+	def display_direction_lines(self, l, inverse=True):
 		xli = []
 		yli = []
 		for k in self.points:
@@ -199,7 +203,7 @@ class Board:
 		y = np.array(yli)
 		plt.scatter(x, y)
 
-		if two:
+		if inverse:
 			xx=[]
 			yy=[]
 			for k,v in l.items():
@@ -281,37 +285,48 @@ class Board:
 
 
 	def utility_function(self):
-		all_lines = self.all_lines()
-		player1_score = 0
-		player2_score = 0
+		all_lines = self.all_lines() # get all directional lines
+		
 		player1_markers = 0
 		player2_markers = 0
-		player1_continous_flag = False
-		player2_continous_flag = False
+
+		for vertical_line_index in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
+			for coordinate in all_lines[vertical_line_index]:
+				mark = self.state[self.points_inverse[coordinate]]
+				if mark is 'WM':
+					player1_markers += 1
+				elif mark is 'BM':
+					player2_markers += 1 
+
+		p1 = 0; p1_row = 0; player1_continous_flag = False
+		p2 = 0; p2_row = 0; player2_continous_flag = False
 
 		for line in all_lines:
 			for point in line:
-				if self.state[point] is 'BM':
-					player1_markers += 1
-					player1_continous_flag = True
-					player2_continous_flag = False
-					if player1_markers >= 5 and player1_continous_flag:
-						# 5 continous markers in a row, instantly do this
+				if self.state[self.points_inverse[point]] is 'WM':
+					p1 += 1
+					player1_continous_flag = True; player2_continous_flag = False
+					if p1 >= 5 and player1_continous_flag:
+						# 5 continous markers -> a row, give high score
+						p1_row = 20
 						break
-				elif self.state[point] is 'WM':
-					player2_markers += 1
-					player1_continous_flag = False
-					player2_continous_flag = True
-					if player2_markers >= 5 and player2_continous_flag:
-						# 5 continous markers in a row, never do this
+				elif self.state[self.points_inverse[point]] is 'BM':
+					p2 += 1
+					player1_continous_flag = False; player2_continous_flag = True
+					if p2 >= 5 and player2_continous_flag:
+						# 5 continous markers -> a row, give low score
+						p2_row = -20
 						break
 				else:
-					player1_continous_flag = False
-					player2_continous_flag = False
-		player1_score = player1_markers * 5
-		player2_score = player2_markers * 5
+					p1 = 0; p2 = 0
+					player1_continous_flag = False; player2_continous_flag = False
 
-		if player:
+		player1_score = player1_markers + p1_row
+		player2_score = player2_markers + p2_row
+		print(player1_score)
+		print(player2_score)
+
+		if self.player:
 			score = player2_score - player1_score
 		else:
 			score = player1_score - player2_score
@@ -322,4 +337,6 @@ if __name__ == '__main__':
 	b = Board()
 	b.normie_f()
 	# b.display_board()
-	b.get_neighbours((3,4))
+	# b.get_neighbours((3,4))
+	# b.display_board()
+	print(b.utility_function())
