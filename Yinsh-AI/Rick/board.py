@@ -146,6 +146,77 @@ class Board:
 		plt.show()
 
 
+	def normie_f(self):
+		self.state[(1,3)] = 'WR'
+		self.state[(2,1)] = 'WR'
+		self.state[(2,5)] = 'WR'
+		self.state[(0,0)] = 'WR'
+		self.state[(3,4)] = 'WR'
+		self.state[(3,8)] = 'BR'
+		self.state[(2,9)] = 'BR'
+		self.state[(3,13)] = 'BR'
+		self.state[(4,1)] = 'BR'
+		self.state[(4,7)] = 'BR'
+		self.state[(3,3)] = 'BM'
+		self.state[(4,3)] = 'WM'
+
+		return True
+
+
+	def display_board(self):
+		E = []
+		WM = []
+		BM = []
+		WR = []
+		BR = []
+		for p, v in self.state.items():
+			if v is 'E':
+				E.append(self.points[p])
+			elif v is 'WM':
+				WM.append(self.points[p])
+			elif v is 'BM':
+				BM.append(self.points[p])
+			elif v is 'WR':
+				WR.append(self.points[p])
+			elif v is 'BR':
+				BR.append(self.points[p])
+		plt.scatter(np.array([x for (x,y) in E]), np.array([y for (x,y) in E]), color='grey')
+		plt.scatter(np.array([x for (x,y) in BM]), np.array([y for (x,y) in BM]), color='orange')
+		plt.scatter(np.array([x for (x,y) in BR]), np.array([y for (x,y) in BR]), color='red')
+		plt.scatter(np.array([x for (x,y) in WM]), np.array([y for (x,y) in WM]), color='green')
+		plt.scatter(np.array([x for (x,y) in WR]), np.array([y for (x,y) in WR]), color='blue')
+		plt.show()
+
+	def display_2(self, l, two=True):
+		xli = []
+		yli = []
+		for k in self.points:
+			xli.append(self.points[k][0])
+			yli.append(self.points[k][1])
+		x = np.array(xli)
+		y = np.array(yli)
+		plt.scatter(x, y)
+
+		if two:
+			xx=[]
+			yy=[]
+			for k,v in l.items():
+				for vv in v:
+					xx.append(vv[0])
+					yy.append(vv[1])
+			plt.scatter(np.array(xx), np.array(yy), color='brown')
+		else:
+			xx=[]
+			yy=[]
+			for k,v in l.items():
+				for vv in v:
+					vvv = self.points[vv]
+					xx.append(vvv[0])
+					yy.append(vvv[1])
+			plt.scatter(np.array(xx), np.array(yy), color='brown')
+
+		plt.show()
+
 	def get_neighbours(self, point):
 		points_to_go = {}
 		points_in_lines = self.lines(point)
@@ -160,18 +231,18 @@ class Board:
 				p = self.points_inverse[p_inv]
 				if marker_jump == 0:
 					if self.state[p] is 'E':
-						points_to_go[key].append(p)
+						points_to_go[key].append(p_inv)
 					elif self.state[p] is 'BR' or self.state[p] is 'WR':
 						break
 					elif self.state[p] is 'WM' or self.state[p] is 'BM':
 						marker_jump += 1
 				elif marker_jump == 1:
 					if self.state[p] is 'E':
-						points_to_go[key].append(p)
+						points_to_go[key].append(p_inv)
 						break
 					elif self.state[p] is 'BR' or self.state[p] is 'WR':
 						break
-
+						
 		neighbour_boards = []
 		# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
 		for key in points_in_lines:
@@ -179,33 +250,29 @@ class Board:
 				flip_markers = []
 				for point2 in points_in_lines[key]:
 					if point1 == point2:
-						# point_current is ring and will be marker
-						# _point is empty and will be ring
-						# flip the markers in the flip_markers																						p
-						neighbour_boards.append(self.make_board(point, point2, flip_markers))
+						neighbour_boards.append(self.make_board(point, self.points_inverse[point2], flip_markers))
 					else:
-						if self.state[point2] is 'E':
+						if self.state[self.points_inverse[point2]] is 'E':
 							pass
 						else:
-							flip_markers.append(point2)
+							flip_markers.append(self.points_inverse[point2])
 
-		return neighbour_boards
-
+		return neighbours
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board()
-		new_board.state = self.state
+		new_board.state = self.state.copy()
 		new_board.state[point_to_go] = self.state[point_at_ring]
 		
 		if self.state[point_at_ring] is 'WR':
 			new_board.state[point_at_ring] = 'WM'
-		else:
+		elif self.state[point_at_ring] is 'BR':
 			new_board.state[point_at_ring] = 'BM'
 
 		for mark in flip_markers:
 			if self.state[mark] is 'WM':
 				new_board.state[mark] = 'BM'
-			else:
+			elif self.state[mark] is 'BM':
 				new_board.state[mark] = 'WM'
 
 		return new_board
@@ -245,6 +312,10 @@ class Board:
 
 		# for only vertical lines:
 		
+		return 0
 
 if __name__ == '__main__':
 	b = Board()
+	b.normie_f()
+	# b.display_board()
+	b.get_neighbours((3,4))
