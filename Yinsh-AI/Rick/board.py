@@ -1,6 +1,7 @@
 from math import cos, sin, pi, isclose
 import numpy as np
 import matplotlib.pyplot as plt
+from random import randint
 K = 1
 ROUND = 3
 TRUNC = 4
@@ -308,6 +309,11 @@ class Board:
 					player1_continous_flag = True; player2_continous_flag = False
 					if p1 >= 5 and player1_continous_flag:
 						# 5 continous markers -> a row, give high score
+						for index, p in enumerate(line):
+							self.state[self.points_inverse[point]] = 'E'
+							if index > 4:
+								break
+						del self.rings[self.player][randint(len(self.rings[self.player]))]
 						p1_row = 20
 						break
 				elif self.state[self.points_inverse[point]] is 'BM':
@@ -315,6 +321,11 @@ class Board:
 					player1_continous_flag = False; player2_continous_flag = True
 					if p2 >= 5 and player2_continous_flag:
 						# 5 continous markers -> a row, give low score
+						for index, p in enumerate(line):
+							self.state[self.points_inverse[point]] = 'E'
+							if index > 4:
+								break
+							del self.rings[self.player][randint(len(self.rings[self.player]))]
 						p2_row = -20
 						break
 				else:
