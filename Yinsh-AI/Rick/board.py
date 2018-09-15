@@ -42,7 +42,9 @@ class Board:
 	points = points
 	points_inverse = {v:k for k,v in points.items()}
 
-	def __init__(self, size=5):
+	def __init__(self, size=5, player=1):
+		self.player = player - 1
+		# player 1 is white, player 2 is black
 		self.size = size
 		# E - Empty; BR; WR; BM; WM
 
@@ -280,7 +282,8 @@ class Board:
 
 	def utility_function(self):
 		all_lines = self.all_lines()
-
+		player1_score = 0
+		player2_score = 0
 		player1_markers = 0
 		player2_markers = 0
 		player1_continous_flag = False
@@ -305,14 +308,15 @@ class Board:
 				else:
 					player1_continous_flag = False
 					player2_continous_flag = False
+		player1_score = player1_markers * 5
+		player2_score = player2_markers * 5
 
+		if player:
+			score = player2_score - player1_score
+		else:
+			score = player1_score - player2_score
 
-		player1_markers = 0
-		player2_markers = 0
-
-		# for only vertical lines:
-		
-		return 0
+		return score
 
 if __name__ == '__main__':
 	b = Board()
