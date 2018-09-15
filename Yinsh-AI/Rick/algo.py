@@ -7,7 +7,7 @@ class Algo:
 		pass
 
 	def print_alp_bet(self, alp, bet):
-		print("alpha: ", alp, ":: beta: ", beta)
+		print("alpha: ", alp, ":: beta: ", bet)
 		return True
 
 	def min_max(self, board):
@@ -34,26 +34,26 @@ class Algo:
 
 
 	def max_value(self, board, alpha, beta):
-		if self.terminal_test:
+		if self.is_terminal:
 			return board.utility
 		
 		self.depth += 1
 
 		neighbs = board.get_neighbours()
-		for b in neighbs:
-			child_value = self.min_value(b, alpha, beta)
-			alpha = min(alpha, child_value)
+		# for b in neighbs:
+		# 	child_value = self.min_value(b, alpha, beta)
+		# 	alpha = min(alpha, child_value)
 
-			if alpha>=beta:
-				return child_value
+		# 	if alpha>=beta:
+		# 		return child_value
 
-		max_util =  max([utility.func(x) for x in neighbs])
+		max_util =  max([x.utility for x in neighbs])
 
-		return max_util
+		print(max_util)
 
 
 	def min_value(self, board, alpha, beta):
-		if self.terminal_test():
+		if self.is_terminal:
 			return utility.func(board)
 
 		self.depth += 1

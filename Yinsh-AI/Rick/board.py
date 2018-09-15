@@ -2,6 +2,8 @@ from math import cos, sin, pi, isclose
 import numpy as np
 import matplotlib.pyplot as plt
 from random import randint
+import copy
+
 K = 1
 ROUND = 3
 TRUNC = 4
@@ -283,14 +285,14 @@ class Board:
 		return neighbour_boards
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
-		new_board = Board(p = (1 + (1 - self.player)))
+		new_board = Board(player = (1 + (1 - self.player)))
 		new_board.state = self.state.copy()
 		new_board.state[point_to_go] = self.state[point_at_ring]
 		
-		new_board.rings = self.state.copy()
-		new_board.rings[new_board.player].remove(point_at_ring)
-		new_board.rings[new_board.player].append(point_to_go)
-
+		new_board.rings = copy.deepcopy(self.rings)
+		new_board.rings[self.player].remove(point_at_ring)
+		new_board.rings[self.player].append(point_to_go)
+		
 		if self.state[point_at_ring] is 'WR':
 			new_board.state[point_at_ring] = 'WM'
 		elif self.state[point_at_ring] is 'BR':
