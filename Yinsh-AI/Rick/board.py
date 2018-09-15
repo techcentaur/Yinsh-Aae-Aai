@@ -42,15 +42,20 @@ class Board:
 	points = points
 	points_inverse = {v:k for k,v in points.items()}
 
-	def __init__(self, size=5, player=1):
-		self.player = player - 1
+	def __init__(self, size=5, other_player=1):
+		self.player = other_player - 1
 		# player 1 is white, player 2 is black
+		# self.player = 1 -> white
+		# self.player = 0 -> black
 		self.size = size
 		# E - Empty; BR; WR; BM; WM
 
+		self.rings = {1: [], 0: []}
 		self.state = {}
 		for k in self.points:
 			self.state[k] = 'E'
+
+		self.__utility__ = None
 
 	def lines(self, point):
 		x1, y1 = self.points[point]
@@ -150,14 +155,25 @@ class Board:
 
 	def normie_f(self):
 		self.state[(1,3)] = 'WR'
+		self.rings[1].append((1,3))
 		self.state[(2,1)] = 'WR'
+		self.rings[1].append((2, 1))
 		self.state[(2,5)] = 'WR'
+		self.rings[1].append((2, 5))
 		self.state[(0,0)] = 'WR'
+		self.rings[1].append((0, 0))
 		self.state[(3,4)] = 'WR'
+		self.rings[1].append((3, 4))
 		self.state[(3,8)] = 'BR'
+		self.rings[0].append((3, 8))
 		self.state[(2,9)] = 'BR'
+		self.rings[0].append((2,9))
 		self.state[(3,13)] = 'BR'
+		self.rings[0].append((3,13))
 		self.state[(4,7)] = 'BR'
+		self.rings[0].append((4,7))
+		self.state[(1,5)] = 'BR'
+		self.rings[0].append((1,5))
 		self.state[(3,3)] = 'BM'
 		self.state[(4,3)] = 'WM'
 		self.state[(4,2)] = 'WM'
@@ -223,47 +239,49 @@ class Board:
 
 		plt.show()
 
-	def get_neighbours(self, point):
-		points_to_go = {}
-		points_in_lines = self.lines(point)
-		# points_in_lines = {'0':[(1.2343, 2.00)], '1': [()] ...}
-
-		# See which positions it is possible to go
-		for key in points_in_lines:
-			points_to_go[key] = []
-
-			marker_jump = 0
-			for p_inv in points_in_lines[key]:
-				p = self.points_inverse[p_inv]
-				if marker_jump == 0:
-					if self.state[p] is 'E':
-						points_to_go[key].append(p_inv)
-					elif self.state[p] is 'BR' or self.state[p] is 'WR':
-						break
-					elif self.state[p] is 'WM' or self.state[p] is 'BM':
-						marker_jump += 1
-				elif marker_jump == 1:
-					if self.state[p] is 'E':
-						points_to_go[key].append(p_inv)
-						break
-					elif self.state[p] is 'BR' or self.state[p] is 'WR':
-						break
-						
+	def get_neighbours(self):
 		neighbour_boards = []
-		# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
-		for key in points_in_lines:
-			for point1 in points_to_go[key]:
-				flip_markers = []
-				for point2 in points_in_lines[key]:
-					if point1 == point2:
-						neighbour_boards.append(self.make_board(point, self.points_inverse[point2], flip_markers))
-					else:
-						if self.state[self.points_inverse[point2]] is 'E':
-							pass
-						else:
-							flip_markers.append(self.points_inverse[point2])
 
-		return neighbours
+		for ring in self.rings[self.player]:
+			points_to_go = {}
+			points_in_lines = self.lines(ring)
+			# points_in_lines = {'0':[(1.2343, 2.00)], '1': [()] ...}
+
+			# See which positions it is possible to go
+			for key in points_in_lines:
+				points_to_go[key] = []
+
+				marker_jump = 0
+				for p_inv in points_in_lines[key]:
+					p = self.points_inverse[p_inv]
+					if marker_jump == 0:
+						if self.state[p] is 'E':
+							points_to_go[key].append(p_inv)
+						elif self.state[p] is 'BR' or self.state[p] is 'WR':
+							break
+						elif self.state[p] is 'WM' or self.state[p] is 'BM':
+							marker_jump += 1
+					elif marker_jump == 1:
+						if self.state[p] is 'E':
+							points_to_go[key].append(p_inv)
+							break
+						elif self.state[p] is 'BR' or self.state[p] is 'WR':
+							break
+							
+			# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
+			for key in points_in_lines:
+				for point1 in points_to_go[key]:
+					flip_markers = []
+					for point2 in points_in_lines[key]:
+						if point1 == point2:
+							neighbour_boards.append(self.make_board(ring, self.points_inverse[point2], flip_markers))
+						else:
+							if self.state[self.points_inverse[point2]] is 'E':
+								pass
+							else:
+								flip_markers.append(self.points_inverse[point2])
+
+		return neighbour_boards
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board()
@@ -283,8 +301,14 @@ class Board:
 
 		return new_board
 
+	@property
+	def utility(self):
+		if self.__utility__ is not None:
+			return self.__utility__
+		else:
+			return self.__utility_function__()
 
-	def utility_function(self):
+	def __utility_function__(self):
 		all_lines = self.all_lines() # get all directional lines
 		
 		player1_markers = 0
@@ -321,6 +345,7 @@ class Board:
 					p1 = 0; p2 = 0
 					player1_continous_flag = False; player2_continous_flag = False
 
+
 		player1_score = player1_markers + p1_row
 		player2_score = player2_markers + p2_row
 		print(player1_score)
@@ -331,7 +356,8 @@ class Board:
 		else:
 			score = player1_score - player2_score
 
-		return score
+		self.__utility__ = score
+		return self.__utility__
 
 if __name__ == '__main__':
 	b = Board()
@@ -339,4 +365,8 @@ if __name__ == '__main__':
 	# b.display_board()
 	# b.get_neighbours((3,4))
 	# b.display_board()
-	print(b.utility_function())
+	# print(b.utility)
+	b.display_board()
+	# print(len(b.get_neighbours()))
+	for n in b.get_neighbours():
+		n.display_board()
