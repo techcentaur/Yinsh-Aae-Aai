@@ -40,6 +40,7 @@ class Algo:
 		
 		neighbs = board.get_neighbours()
 		for (i, b) in enumerate(neighbs):
+			print("depth-max: ", depth)
 			print("--------------------------", i, "-------------------------------")
 			# print("[*] ", depth)
 			child_value = self.min_value(b, alpha, beta, depth+1)
@@ -49,6 +50,7 @@ class Algo:
 			alpha = max(alpha, child_value)
 			# print("alpha-dash", alpha)
 			if alpha>=beta:
+				print("pruned")
 				return child_value
 
 		max_util =  max([x.utility for x in neighbs])
@@ -63,6 +65,7 @@ class Algo:
 
 		neighbs = board.get_neighbours()
 		for (i, b) in enumerate(neighbs):
+			print("depth-min: ", depth)
 			print(i)
 			# print("[*] ", depth)
 			child_value = self.max_value(b, alpha, beta, depth+1)
@@ -71,6 +74,7 @@ class Algo:
 			beta = min(beta, child_value)
 			# print("beta-dash", beta)
 			if alpha>=beta:
+				print("pruned")
 				return child_value
 
 		min_util =  min([x.utility for x in neighbs])
