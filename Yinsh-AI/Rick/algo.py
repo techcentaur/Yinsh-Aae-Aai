@@ -39,47 +39,42 @@ class Algo:
 			return board.utility
 		
 		neighbs = board.get_neighbours()
+		lenn = len(neighbs)
 		for (i, b) in enumerate(neighbs):
-			print("depth-max: ", depth)
-			print("--------------------------", i, "-------------------------------")
-			# print("[*] ", depth)
+			print("--------------------------", i, "/", lenn, "-------------------------------")
 			child_value = self.min_value(b, alpha, beta, depth+1)
-			# self.print_alp_bet(alpha, beta)
-			# print("child val", child_value)
 
 			alpha = max(alpha, child_value)
-			# print("alpha-dash", alpha)
+			self.print_alp_bet(alpha, beta)
 			if alpha>=beta:
-				print("pruned")
+				print("pruned in max")
 				return child_value
 
 		max_util =  max([x.utility for x in neighbs])
 
-		# print("max-util", max_util)
 		return max_util
 
 
 	def min_value(self, board, alpha, beta, depth):
 		if self.is_terminal(depth):
 			return board.utility
-
+		gc.collect()
 		neighbs = board.get_neighbours()
+		lenn = len(neighbs)
+
 		for (i, b) in enumerate(neighbs):
-			print("depth-min: ", depth)
-			print(i)
-			# print("[*] ", depth)
+			print(i, "/", lenn)
 			child_value = self.max_value(b, alpha, beta, depth+1)
-			# self.print_alp_bet(alpha, beta)
-			# print("child val", child_value)
 			beta = min(beta, child_value)
-			# print("beta-dash", beta)
+
+			self.print_alp_bet(alpha, beta)
+			print("dop")
 			if alpha>=beta:
-				print("pruned")
+				print("pruned in min")
 				return child_value
 
 		min_util =  min([x.utility for x in neighbs])
 
-		# print("min-util", min_util)
 		return min_util
 
 if __name__ == '__main__':
