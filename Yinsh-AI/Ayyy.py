@@ -184,9 +184,11 @@ class RandomPlayer:
 			else:
 				move_parsed = board.parse_move(move)
 				with open('fuck', 'a') as f:
-					f.write(str(self.board.rings) + " ")
+					f.write(str(self.board.rings) + "\n")
 				# self.board.display_board()
 				self.board.execute_move(move_parsed)
 				moves_s = self.board.moves
+				with open('fuck', 'a') as f:
+					f.write(str(self.board.rings) + " ")
 
 random_player = RandomPlayer()

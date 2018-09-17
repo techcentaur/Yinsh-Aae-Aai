@@ -390,13 +390,13 @@ class Board:
 					p2 = 0
 					if p1 == 1:
 						start_row = indx
-						with open('starter_row', 'w') as f:
-							f.write(str(start_row) + " " + str(point))
+						with open('starter_row', 'a') as f:
+							f.write(str(start_row) + " " + str(point) + "\n")
 					player1_continous_flag = True; player2_continous_flag = False
 					if p1 >= 5 and player1_continous_flag:
 						# 5 continous markers -> a row, give high score
-						with open('print out row', 'w') as f:
-							f.write(str(line) + " " + str(start_row))
+						with open('print out row', 'a') as f:
+							f.write(str(line) + " " + str(start_row) + "\n")
 						self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
 						for index, p in enumerate(line[start_row: start_row+5]):
 							self.state[self.points_inverse[p]] = 'E'
@@ -414,9 +414,13 @@ class Board:
 					p1 = 0
 					if p2 == 1:
 						start_row = indx
+						with open('starter_row 2', 'a') as f:
+							f.write(str(start_row) + " " + str(point) + "\n")
 					player1_continous_flag = False; player2_continous_flag = True
 					if p2 >= 5 and player2_continous_flag:
 						# 5 continous markers -> a row, give low score
+						with open('print out row 2', 'a') as f:
+							f.write(str(line) + " " + str(start_row) + "\n")
 						self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
 						for index, p in enumerate(line[start_row: start_row+5]):
 							self.state[self.points_inverse[p]] = 'E'
