@@ -4,7 +4,7 @@ from board import Board
 
 class Algo:
 	def __init__(self):
-		self.depth = 2
+		self.depth = 1
 
 	def print_alp_bet(self, alp, bet):
 		print("alpha: ", alp, ":: beta: ", bet)
@@ -20,8 +20,8 @@ class Algo:
 		# print("child val: ", child_val)
 		
 		# print(brd.moves)
-		return brd
 		gc.collect() # collect garbage here
+		return brd
 
 		# try:
 		# 	for b in board.get_neighbours():

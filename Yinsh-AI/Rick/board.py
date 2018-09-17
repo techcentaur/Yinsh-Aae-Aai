@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from random import randint
 import copy
 
@@ -23,7 +23,7 @@ class Board:
 
 	for n in range(size+1):
 		if not n:
-			points[(0.0, 0.0)] = (0.0, 0.0)
+			points[(0, 0)] = (0, 0)
 		else:
 			for m in range(6):
 				y = round(truncate(n*K*(cos(m*(pi/3))), TRUNC), ROUND)
@@ -284,51 +284,92 @@ class Board:
 
 		return neighbour_boards
 
-	def execute_move(self, moves):
-		lines = self.lines(moves[0])
-		line = None
-		idx = None
-		for idx, line in lines.items():
-			if self.points[moves[1]] in line:
-				idx = line.index(self.points[moves[1]])
-				break
+	def execute_move(self, moves, moves_string):
+		if moves_string.startswith('R'):
+			for (p1, p2) in moves[2]:
+				lines = self.lines(p1)
+				line = None
+				idx = None
+				for idx, line in lines.items():
+					if self.points[p2] in line:
+						idx = line.index(self.points[p2])
+						break
+				
+				for p in [self.points[p1]] + line[:idx+1]:
+					self.state[self.points_inverse[p]] = 'E'
+			
+			for pp in moves[3]:
+				self.state[pp] = 'E'
+				self.rings[int(not bool(self.player))].remove(pp)
+	
 
-		for p in line[:idx]:
-			if self.state[self.points_inverse[p]] is 'BM':
-				self.state[self.points_inverse[p]] = 'WM'
-			elif self.state[self.points_inverse[p]] is 'WM':
-				self.state[self.points_inverse[p]] = 'BM'
-		
-		if self.state[moves[0]]  is 'WR':
-			self.state[moves[0]] = 'WM'
-			self.state[moves[1]] = 'WR'
-		elif self.state[moves[0]]  is 'BR':
-			self.state[moves[0]] = 'BM'
-			self.state[moves[1]] = 'BR'
-
-		self.rings[int(not bool(self.player))].remove(moves[0])
-		self.rings[int(not bool(self.player))].append(moves[1])
-
-		for (p1, p2) in moves[2]:
-			lines = self.lines(p1)
+			lines = self.lines(moves[0])
 			line = None
 			idx = None
 			for idx, line in lines.items():
-				if self.points[p2] in line:
-					idx = line.index(self.points[p2])
+				if self.points[moves[1]] in line:
+					idx = line.index(self.points[moves[1]])
 					break
-			
-			for p in [self.points[p1]] + line[:idx+1]:
-				self.state[self.points_inverse[p]] = 'E'
-		
-		for pp in moves[3]:
-			self.state[pp] = 'E'
-			self.rings[int(not bool(self.player))].remove(pp)
 
-		while True:
-			util = self.__utility_function__()
-			if util is not False:
-				break
+			for p in line[:idx]:
+				if self.state[self.points_inverse[p]] is 'BM':
+					self.state[self.points_inverse[p]] = 'WM'
+				elif self.state[self.points_inverse[p]] is 'WM':
+					self.state[self.points_inverse[p]] = 'BM'
+			
+			if self.state[moves[0]]  is 'WR':
+				self.state[moves[0]] = 'WM'
+				self.state[moves[1]] = 'WR'
+			elif self.state[moves[0]]  is 'BR':
+				self.state[moves[0]] = 'BM'
+				self.state[moves[1]] = 'BR'
+
+			self.rings[int(not bool(self.player))].remove(moves[0])
+			self.rings[int(not bool(self.player))].append(moves[1])
+		else:
+
+			lines = self.lines(moves[0])
+			line = None
+			idx = None
+			for idx, line in lines.items():
+				if self.points[moves[1]] in line:
+					idx = line.index(self.points[moves[1]])
+					break
+
+			for p in line[:idx]:
+				if self.state[self.points_inverse[p]] is 'BM':
+					self.state[self.points_inverse[p]] = 'WM'
+				elif self.state[self.points_inverse[p]] is 'WM':
+					self.state[self.points_inverse[p]] = 'BM'
+			
+			if self.state[moves[0]]  is 'WR':
+				self.state[moves[0]] = 'WM'
+				self.state[moves[1]] = 'WR'
+			elif self.state[moves[0]]  is 'BR':
+				self.state[moves[0]] = 'BM'
+				self.state[moves[1]] = 'BR'
+
+			self.rings[int(not bool(self.player))].remove(moves[0])
+			self.rings[int(not bool(self.player))].append(moves[1])
+
+
+			for (p1, p2) in moves[2]:
+				lines = self.lines(p1)
+				line = None
+				idx = None
+				for idx, line in lines.items():
+					if self.points[p2] in line:
+						idx = line.index(self.points[p2])
+						break
+				
+				for p in [self.points[p1]] + line[:idx+1]:
+					self.state[self.points_inverse[p]] = 'E'
+			
+			for pp in moves[3]:
+				self.state[pp] = 'E'
+				self.rings[int(not bool(self.player))].remove(pp)
+		
+		self.__utility_function__()
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board(player = (1 + (1 - self.player)))
@@ -359,88 +400,118 @@ class Board:
 		if self.__utility__ is not None:
 			return self.__utility__
 		else:
-			while True:
-				util = self.__utility_function__()
-				if util is not False:
-					return self.__utility__
+			return self.__utility_function__()
+			# while True:
+			# 	util = self.__utility_function__()
+			# 	if util is not False:
+			# 		return self.__utility__
 
 	def __utility_function__(self):
-		# print('calcultatin utility...')
-		all_lines = self.all_lines() # get all directional lines
-		
-		player1_markers = 0
-		player2_markers = 0
+		total_lines = self.all_lines()
 
-		for vertical_line_index in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
-			for coordinate in all_lines[vertical_line_index]:
-				mark = self.state[self.points_inverse[coordinate]]
+		p1_mark = 0
+		p2_mark = 0
+
+		for verti in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
+			for coord in total_lines[verti]:
+				mark = self.state[self.points_inverse[coord]]
 				if mark is 'WM':
-					player1_markers += 1
+					p1_mark += 1
 				elif mark is 'BM':
-					player2_markers += 1 
+					p2_mark += 1
 
-		p1 = 0; p1_row = 0; player1_continous_flag = False
-		p2 = 0; p2_row = 0; player2_continous_flag = False
+		p1 = 0; p1_row = 0
+		p2 = 0; p2_row = 0
+		start_row_index_p1 = None
+		start_row_index_p2 = None
 
-		# print('all lines are: ', len(all_lines))
-		for inddd, line in enumerate(all_lines):
-			for indx, point in enumerate(line):
-				if self.state[self.points_inverse[point]] is 'WM':
-					p1 += 1
+		for l in total_lines:
+			for p in l:
+				if self.state[self.points_inverse[p]] is 'WM':
+					p1 = p1 + 1
+					p2_row = p2_row + (p2+p2)
 					p2 = 0
+
+
 					if p1 == 1:
-						start_row = indx
-						with open('starter_row', 'a') as f:
-							f.write(str(start_row) + " " + str(point) + "\n")
-					player1_continous_flag = True; player2_continous_flag = False
-					if p1 >= 5 and player1_continous_flag:
-						# 5 continous markers -> a row, give high score
-						with open('print out row', 'a') as f:
-							f.write(str(line) + " " + str(start_row) + "\n")
-						self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
-						for index, p in enumerate(line[start_row: start_row+5]):
-							self.state[self.points_inverse[p]] = 'E'
+						start_row_index_p1 = l.index(p)
 
-						with open('rings', 'w') as f:
-							f.write(str(self.rings))
-						x = randint(0, len(self.rings[self.player])-1)
-						self.moves[3].append(self.rings[self.player][x])
-						self.state[self.rings[self.player][x]] = 'E'
-						del self.rings[self.player][x]
-						p1_row = 20
-						return False
-				elif self.state[self.points_inverse[point]] is 'BM':
-					p2 += 1
+					if p1 >= 5:
+						# self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1+4]]))
+						# for iii in range(start_row_index_p1, start_row_index_p1+5):
+						# 	self.state[self.points_inverse[l[iii]]] = 'E'
+						try:
+							self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1+4]]))
+						except IndexError:
+							try:
+								self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1-4]]))
+							except IndexError:
+								pass
+
+						
+						try:
+							xx = l[start_row_index_p1 + 5]
+							for iii in range(start_row_index_p1, start_row_index_p1+5):
+								self.state[self.points_inverse[l[iii]]] = 'E'
+						except IndexError:
+							for iii in range(start_row_index_p1, start_row_index_p1-5, -1):
+								self.state[self.points_inverse[l[iii]]] = 'E'
+
+
+						pll = int( not bool(self.player))
+						self.state[self.rings[pll][len(self.rings[pll])-1]] = 'E'
+						self.moves[3].append(self.rings[pll][len(self.rings[pll])-1])
+						self.rings[pll].pop()
+						p1 = 0
+						start_row_index_p1 = None
+
+				elif self.state[self.points_inverse[p]] is 'BM':
+					p2 = p2 + 1
+					p1_row = p1_row + (p1+p1)
 					p1 = 0
+
 					if p2 == 1:
-						start_row = indx
-						with open('starter_row 2', 'a') as f:
-							f.write(str(start_row) + " " + str(point) + "\n")
-					player1_continous_flag = False; player2_continous_flag = True
-					if p2 >= 5 and player2_continous_flag:
-						# 5 continous markers -> a row, give low score
-						with open('print out row 2', 'a') as f:
-							f.write(str(line) + " " + str(start_row) + "\n")
-						self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
-						for index, p in enumerate(line[start_row: start_row+5]):
-							self.state[self.points_inverse[p]] = 'E'
+						start_row_index_p2 = l.index(p)
 
-						x = randint(0, len(self.rings[self.player])-1)
-						self.moves[3].append(self.rings[self.player][x])
-						self.state[self.rings[self.player][x]] = 'E'
-						del self.rings[self.player][x]
+					if p2 >= 5:
+						try:
+							self.moves[2].append((self.points_inverse[l[start_row_index_p2]], self.points_inverse[l[start_row_index_p2+4]]))
+						except IndexError:
+							try:
+								self.moves[2].append((self.points_inverse[l[start_row_index_p2]], self.points_inverse[l[start_row_index_p2-4]]))
+							except IndexError:
+								pass
+						
+						try:
+							xx = l[start_row_index_p2 + 5]
+							for iii in range(start_row_index_p2, start_row_index_p2+5):
+								self.state[self.points_inverse[l[iii]]] = 'E'
+						except IndexError:
+							for iii in range(start_row_index_p2, start_row_index_p2-5, -1):
+								self.state[self.points_inverse[l[iii]]] = 'E'
 
-						p2_row = -20
-						return False
+
+						# self.state[self.rings[self.player][len(self.rings[self.player])-1]] = 'E'
+						# self.moves[3].append(self.rings[self.player][len(self.rings[self.player])-1])
+						# self.rings[self.player].pop()
+
+						pll = int( not bool(self.player))
+						self.state[self.rings[pll][len(self.rings[pll])-1]] = 'E'
+						self.moves[3].append(self.rings[pll][len(self.rings[pll])-1])
+						self.rings[pll].pop()
+						p2 = 0
+						start_row_index_p2 = None
+
 				else:
+					p1_row = p1_row + (p1+p1)
+					p2_row = p2_row + (p2+p2)
 					p1 = 0
 					p2 = 0
-					player1_continous_flag = False; player2_continous_flag = False
-		# print('out of loop')
-		player1_score = player1_markers + p1_row
-		player2_score = player2_markers + p2_row
-		# print(player1_score)
-		# print(player2_score)
+					start_row_index_p1 = None
+					start_row_index_p2 = None
+
+		player1_score = 5*p1_mark + p1_row
+		player2_score = 5*p2_mark + p2_row
 
 		if self.player:
 			score = player1_score - player2_score
@@ -448,9 +519,95 @@ class Board:
 			score = player2_score - player1_score
 
 		self.__utility__ = score
-		# print(score)
-		# print(self.__utility__)
-		return self.__utility__
+		return score
+
+	# def __utility_function__(self):
+	# 	# print('calcultatin utility...')
+	# 	all_lines = self.all_lines() # get all directional lines
+		
+	# 	player1_markers = 0
+	# 	player2_markers = 0
+
+	# 	for vertical_line_index in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
+	# 		for coordinate in all_lines[vertical_line_index]:
+	# 			mark = self.state[self.points_inverse[coordinate]]
+	# 			if mark is 'WM':
+	# 				player1_markers += 1
+	# 			elif mark is 'BM':
+	# 				player2_markers += 1 
+
+	# 	p1 = 0; p1_row = 0; player1_continous_flag = False
+	# 	p2 = 0; p2_row = 0; player2_continous_flag = False
+
+	# 	# print('all lines are: ', len(all_lines))
+	# 	for inddd, line in enumerate(all_lines):
+	# 		for indx, point in enumerate(line):
+	# 			if self.state[self.points_inverse[point]] is 'WM':
+	# 				p1 += 1
+	# 				p2 = 0
+	# 				if p1 == 1:
+	# 					start_row = indx
+	# 					with open('starter_row', 'a') as f:
+	# 						f.write(str(start_row) + " " + str(point) + "\n")
+	# 				player1_continous_flag = True; player2_continous_flag = False
+	# 				if p1 >= 5 and player1_continous_flag:
+	# 					# 5 continous markers -> a row, give high score
+	# 					with open('print out row', 'a') as f:
+	# 						f.write(str(line) + " " + str(start_row) + "\n")
+	# 					self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
+	# 					for index, p in enumerate(line[start_row: start_row+5]):
+	# 						self.state[self.points_inverse[p]] = 'E'
+
+	# 					with open('rings', 'w') as f:
+	# 						f.write(str(self.rings))
+	# 					x = randint(0, len(self.rings[self.player])-1)
+	# 					self.moves[3].append(self.rings[self.player][x])
+	# 					self.state[self.rings[self.player][x]] = 'E'
+	# 					del self.rings[self.player][x]
+	# 					p1_row = 20
+	# 					return False
+	# 			elif self.state[self.points_inverse[point]] is 'BM':
+	# 				p2 += 1
+	# 				p1 = 0
+	# 				if p2 == 1:
+	# 					start_row = indx
+	# 					with open('starter_row 2', 'a') as f:
+	# 						f.write(str(start_row) + " " + str(point) + "\n")
+	# 				player1_continous_flag = False; player2_continous_flag = True
+	# 				if p2 >= 5 and player2_continous_flag:
+	# 					# 5 continous markers -> a row, give low score
+	# 					with open('print out row 2', 'a') as f:
+	# 						f.write(str(line) + " " + str(start_row) + "\n")
+	# 					self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
+	# 					for index, p in enumerate(line[start_row: start_row+5]):
+	# 						self.state[self.points_inverse[p]] = 'E'
+
+	# 					x = randint(0, len(self.rings[self.player])-1)
+	# 					self.moves[3].append(self.rings[self.player][x])
+	# 					self.state[self.rings[self.player][x]] = 'E'
+	# 					del self.rings[self.player][x]
+
+	# 					p2_row = 20
+	# 					return False
+	# 			else:
+	# 				p1 = 0
+	# 				p2 = 0
+	# 				player1_continous_flag = False; player2_continous_flag = False
+	# 	# print('out of loop')
+	# 	player1_score = player1_markers + p1_row
+	# 	player2_score = player2_markers + p2_row
+	# 	# print(player1_score)
+	# 	# print(player2_score)
+
+	# 	if self.player:
+	# 		score = player1_score - player2_score
+	# 	else:
+	# 		score = player2_score - player1_score
+
+	# 	self.__utility__ = score
+	# 	# print(score)
+	# 	# print(self.__utility__)
+	# 	return self.__utility__
 
 # if __name__ == '__main__':
 	# b = Board()
