@@ -37,21 +37,21 @@ class Algo:
 
 	def max_value(self, board, alpha, beta, depth):
 		if self.is_terminal(depth):
-			print('Depth reached')
+			# print('Depth reached')
 			# print(board.utility)
 			return board.utility, board
 		
 		neighbs = board.get_neighbours()
 		lenn = len(neighbs)
 		for (i, b) in enumerate(neighbs):
-			print("--------------------------", i, "/", lenn, "-------------------------------")
+			# print("--------------------------", i, "/", lenn, "-------------------------------")
 			child_value, brd = self.min_value(b, alpha, beta, depth+1)
 
 			alpha = max(alpha, child_value)
-			self.print_alp_bet(alpha, beta)
+			# self.print_alp_bet(alpha, beta)
 			if alpha>=beta:
-				print("pruned in max")
-				print(child_value)
+				# print("pruned in max")
+				# print(child_value)
 				return child_value, brd
 
 		lss = [x.utility for x in neighbs]
@@ -67,14 +67,14 @@ class Algo:
 		lenn = len(neighbs)
 
 		for (i, b) in enumerate(neighbs):
-			print(i, "/", lenn)
+			# print(i, "/", lenn)
 			child_value, brd = self.max_value(b, alpha, beta, depth+1)
 			beta = min(beta, child_value)
 
-			self.print_alp_bet(alpha, beta)
-			print("dop")
+			# self.print_alp_bet(alpha, beta)
+			# print("dop")
 			if alpha>=beta:
-				print("pruned in min")
+				# print("pruned in min")
 				return child_value, brd
 
 		lss = [x.utility for x in neighbs]

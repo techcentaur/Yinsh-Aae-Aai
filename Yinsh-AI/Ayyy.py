@@ -80,7 +80,7 @@ class RandomPlayer:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
 				else:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
-				self.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+				self.board.rings[self.player].append((int(move_split[1]),int(move_split[2])))
 
 		while True: # Keep playing moves till game is over
 			move_seq = []
@@ -179,7 +179,7 @@ class RandomPlayer:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
 				else:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
-				self.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+				self.board.rings[self.player].append((int(move_split[1]),int(move_split[2])))
 			else:
 				move_parsed = board.parse_move(move)
 				self.board.execute_move(move_parsed)
