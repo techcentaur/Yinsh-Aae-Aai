@@ -19,7 +19,7 @@ class Algo:
 		child_val, brd = self.max_value(board, alpha_init, beta_init, depth)
 		# print("child val: ", child_val)
 		
-		print(brd.moves)
+		# print(brd.moves)
 		return brd
 		gc.collect() # collect garbage here
 
@@ -63,6 +63,7 @@ class Algo:
 		if self.is_terminal(depth):
 			return board.utility, board
 		gc.collect()
+		# board.display_board()
 		neighbs = board.get_neighbours()
 		lenn = len(neighbs)
 

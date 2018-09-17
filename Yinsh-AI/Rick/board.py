@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from random import randint
 import copy
 
@@ -204,10 +204,10 @@ class Board:
 			elif v is 'BR':
 				BR.append(self.points[p])
 		plt.scatter(np.array([x for (x,y) in E]), np.array([y for (x,y) in E]), color='grey')
-		plt.scatter(np.array([x for (x,y) in BM]), np.array([y for (x,y) in BM]), color='orange')
-		plt.scatter(np.array([x for (x,y) in BR]), np.array([y for (x,y) in BR]), color='red')
-		plt.scatter(np.array([x for (x,y) in WM]), np.array([y for (x,y) in WM]), color='green')
-		plt.scatter(np.array([x for (x,y) in WR]), np.array([y for (x,y) in WR]), color='blue')
+		plt.scatter(np.array([x for (x,y) in BM]), np.array([y for (x,y) in BM]), color='green')
+		plt.scatter(np.array([x for (x,y) in BR]), np.array([y for (x,y) in BR]), color='blue')
+		plt.scatter(np.array([x for (x,y) in WM]), np.array([y for (x,y) in WM]), color='orange')
+		plt.scatter(np.array([x for (x,y) in WR]), np.array([y for (x,y) in WR]), color='red')
 		plt.show()
 
 	def display_direction_lines(self, l, inverse=True):
@@ -306,8 +306,8 @@ class Board:
 			self.state[moves[0]] = 'BM'
 			self.state[moves[1]] = 'BR'
 
-		self.rings[self.player].remove(moves[0])
-		self.rings[self.player].append(moves[1])
+		self.rings[int(not bool(self.player))].remove(moves[0])
+		self.rings[int(not bool(self.player))].append(moves[1])
 
 		for (p1, p2) in moves[2]:
 			lines = self.lines(p1)
@@ -320,10 +320,15 @@ class Board:
 			
 			for p in [self.points[p1]] + line[:idx+1]:
 				self.state[self.points_inverse[p]] = 'E'
-		for p in moves[3]:
-			self.state[p] = 'E'
-			self.rings[self.player] = 'E'
+		
+		for pp in moves[3]:
+			self.state[pp] = 'E'
+			self.rings[int(not bool(self.player))].remove(pp)
 
+		while True:
+			util = self.__utility_function__()
+			if util is not False:
+				break
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board(player = (1 + (1 - self.player)))
@@ -360,7 +365,7 @@ class Board:
 					return self.__utility__
 
 	def __utility_function__(self):
-		print('calcultatin utility...')
+		# print('calcultatin utility...')
 		all_lines = self.all_lines() # get all directional lines
 		
 		player1_markers = 0
@@ -377,21 +382,27 @@ class Board:
 		p1 = 0; p1_row = 0; player1_continous_flag = False
 		p2 = 0; p2_row = 0; player2_continous_flag = False
 
-		print('all lines are: ', len(all_lines))
+		# print('all lines are: ', len(all_lines))
 		for inddd, line in enumerate(all_lines):
-
 			for indx, point in enumerate(line):
 				if self.state[self.points_inverse[point]] is 'WM':
-					p1 += 1; p2 = 0
+					p1 += 1
+					p2 = 0
 					if p1 == 1:
 						start_row = indx
+						with open('starter_row', 'w') as f:
+							f.write(str(start_row) + " " + str(point))
 					player1_continous_flag = True; player2_continous_flag = False
 					if p1 >= 5 and player1_continous_flag:
 						# 5 continous markers -> a row, give high score
+						with open('print out row', 'w') as f:
+							f.write(str(line) + " " + str(start_row))
 						self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
 						for index, p in enumerate(line[start_row: start_row+5]):
 							self.state[self.points_inverse[p]] = 'E'
 
+						with open('rings', 'w') as f:
+							f.write(str(self.rings))
 						x = randint(0, len(self.rings[self.player])-1)
 						self.moves[3].append(self.rings[self.player][x])
 						self.state[self.rings[self.player][x]] = 'E'
@@ -399,7 +410,8 @@ class Board:
 						p1_row = 20
 						return False
 				elif self.state[self.points_inverse[point]] is 'BM':
-					p2 += 1; p1 = 0;
+					p2 += 1
+					p1 = 0
 					if p2 == 1:
 						start_row = indx
 					player1_continous_flag = False; player2_continous_flag = True
@@ -417,22 +429,23 @@ class Board:
 						p2_row = -20
 						return False
 				else:
-					p1 = 0; p2 = 0
+					p1 = 0
+					p2 = 0
 					player1_continous_flag = False; player2_continous_flag = False
-		print('out of loop')
+		# print('out of loop')
 		player1_score = player1_markers + p1_row
 		player2_score = player2_markers + p2_row
 		# print(player1_score)
 		# print(player2_score)
 
 		if self.player:
-			score = player2_score - player1_score
-		else:
 			score = player1_score - player2_score
+		else:
+			score = player2_score - player1_score
 
 		self.__utility__ = score
-		print(score)
-		print(self.__utility__)
+		# print(score)
+		# print(self.__utility__)
 		return self.__utility__
 
 # if __name__ == '__main__':
@@ -497,6 +510,11 @@ def parse_move_reverse(move, in_list=False):
 
 
 
+if __name__ == '__main__':
+	# print(parse_move("RS 3 5 RE 3 10 X 5 26 S 3 8 M 4 7"))
+	b = Board()
+	b.normie_f()
+	b.display_board()
 
 # print(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7'))
 # print(parse_move_reverse(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7')))

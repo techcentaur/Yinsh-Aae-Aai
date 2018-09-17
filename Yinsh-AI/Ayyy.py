@@ -77,10 +77,10 @@ class RandomPlayer:
 			move_split = move.split()
 			if move_split[0] == 'P':
 				if self.player:
-					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
-				else:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
-				self.board.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+				else:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
+				self.board.rings[int(not bool(self.player))].append((int(move_split[1]),int(move_split[2])))
 
 		while True: # Keep playing moves till game is over
 			move_seq = []
@@ -105,6 +105,7 @@ class RandomPlayer:
 					# moveS, i = self.selectRing()
 					# moveM, hex, pos = self.moveRing()
 					move_s = board.parse_move_reverse(brd.moves, True)
+					brd.player = self.board.player
 					self.board = brd
 					self.game.execute_move(move_s[0])
 					state = self.game.check_player_state()
@@ -135,7 +136,7 @@ class RandomPlayer:
 								if success != 0:
 									break
 							state = self.game.check_player_state()
-							move_seq.append(move_start); move_seq.append(move_end);
+							move_seq.append(move_s[2+rows_to_remove]); move_seq.append(move_s[3+rows_to_remove]);
 							if state == 4 or state == 7:
 								move = move_s[4+rows_to_remove]
 
@@ -146,7 +147,7 @@ class RandomPlayer:
 										break
 
 								self.game.execute_move(move)
-								move_seq.append(move)
+								move_seq.append(move_s[4+rows_to_remove])
 
 								state = self.game.check_player_state()
 						break  #removed all rows and now, chance for next player
@@ -176,12 +177,16 @@ class RandomPlayer:
 			move_split = move.split()
 			if move_split[0] == 'P':
 				if self.player:
-					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
-				else:
 					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
-				self.board.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+				else:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
+				self.board.rings[int(not bool(self.player))].append((int(move_split[1]),int(move_split[2])))
 			else:
 				move_parsed = board.parse_move(move)
+				with open('fuck', 'a') as f:
+					f.write(str(self.board.rings) + " ")
+				# self.board.display_board()
 				self.board.execute_move(move_parsed)
+				moves_s = self.board.moves
 
 random_player = RandomPlayer()
