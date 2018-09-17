@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from random import randint
 import copy
 
@@ -288,11 +288,12 @@ class Board:
 		lines = self.lines(moves[0])
 		line = None
 		idx = None
-		for idx, line in enumerate(lines):
+		for idx, line in lines.items():
 			if self.points[moves[1]] in line:
+				idx = line.index(self.points[moves[1]])
 				break
 
-		for p in line:
+		for p in line[:idx]:
 			if self.state[self.points_inverse[p]] is 'BM':
 				self.state[self.points_inverse[p]] = 'WM'
 			elif self.state[self.points_inverse[p]] is 'WM':
@@ -305,6 +306,23 @@ class Board:
 			self.state[moves[0]] = 'BM'
 			self.state[moves[1]] = 'BR'
 
+		self.rings[self.player].remove(moves[0])
+		self.rings[self.player].append(moves[1])
+
+		for (p1, p2) in moves[2]:
+			lines = self.lines(p1)
+			line = None
+			idx = None
+			for idx, line in lines.items():
+				if self.points[p2] in line:
+					idx = line.index(self.points[p2])
+					break
+			
+			for p in [self.points[p1]] + line[:idx+1]:
+				self.state[self.points_inverse[p]] = 'E'
+		for p in moves[3]:
+			self.state[p] = 'E'
+			self.rings[self.player] = 'E'
 
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
@@ -417,9 +435,9 @@ class Board:
 		print(self.__utility__)
 		return self.__utility__
 
-if __name__ == '__main__':
-	b = Board()
-	b.normie_f()
+# if __name__ == '__main__':
+	# b = Board()
+	# b.normie_f()
 	# b.display_board()
 	# b.get_neighbours((3,4))
 	# b.display_board()
@@ -429,5 +447,57 @@ if __name__ == '__main__':
 	# print(len(b.get_neighbours()))
 	# for n in b.get_neighbours():
 	# 	n.display_board()
-	print(b.utility)
+	# print(b.utility)
 	# b.display_board()
+	# b.execute_move([(1,3), (0,0), [], []])	
+	# b.display_board()
+
+	# b.execute_move([(3,4), (5,3), [((4,2), (4,0))], [(0,0)]])
+
+	# b.display_board()
+
+def parse_move(move):
+	ms = move.split()
+	msp = []
+	parsed_moves = [None, None, [], []]
+	for i in range(int(len(ms)/3)):
+		msp.append(ms[i*3:(i+1)*3])
+
+	row = [None, None]
+	for index, i in enumerate(msp):
+		if i[0] == 'S':
+			parsed_moves[0] = (int(i[1]), int(i[2]))
+		elif i[0] == 'M':
+			parsed_moves[1] = (int(i[1]), int(i[2]))
+		elif i[0] == 'RS':
+			row[0] = (int(i[1]), int(i[2]))
+		elif i[0] == 'RE':
+			row[1] = (int(i[1]), int(i[2]))
+			if row[0] and row[1]:
+				parsed_moves[2].append((row[0], row[1]))
+		elif i[0] == 'X':
+			parsed_moves[3].append((int(i[1]), int(i[2])))
+	return parsed_moves
+
+def parse_move_reverse(move, in_list=False):
+
+	ms = []
+	ms.append('S {} {}'.format(move[0][0], move[0][1]))
+	ms.append('M {} {}'.format(move[1][0], move[1][1]))
+	for i in move[2]:
+		ms.append('RS {} {}'.format(i[0][0], i[0][1]))
+		ms.append('RE {} {}'.format(i[1][0], i[1][1]))
+	for i in move[3]:
+		ms.append('X {} {}'.format(i[0], i[1]))
+
+	if not in_list:
+		return " ".join(ms)
+	else:
+		return ms
+
+
+
+
+# print(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7'))
+# print(parse_move_reverse(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7')))
+# print(parse_move_reverse(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7'), True))

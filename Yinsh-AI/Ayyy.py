@@ -74,8 +74,17 @@ class RandomPlayer:
 		if self.player == 1:
 			move = sys.stdin.readline().strip()
 			self.game.execute_move(move)
+			move_split = move.split()
+			if move_split[0] == 'P':
+				if self.player:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
+				else:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
+				self.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+
 		while True: # Keep playing moves till game is over
 			move_seq = []
+
 			while True: # Loop till valid move sequence is found
 				state = self.game.check_player_state()
 				if state == 0: ## Place Rings
@@ -92,46 +101,87 @@ class RandomPlayer:
 						break
 				elif state == 1: ## Select a Ring and the Move to Valid Postion
 					brd = self.algo.min_max(self.board)
-					self.board.state[brd.moves[0]] = 
-					moveS, i = self.selectRing()
-					moveM, hex, pos = self.moveRing()
-					self.game.execute_move(moveS)
+
+					# moveS, i = self.selectRing()
+					# moveM, hex, pos = self.moveRing()
+					move_s = board.parse_move_reverse(brd.moves, True)
+					self.board = brd
+					self.game.execute_move(move_s[0])
 					state = self.game.check_player_state()
-					success = self.game.execute_move(moveM)
+					success = self.game.execute_move(move_s[1])
 					if success != 0:
-						self.RingPos[i] = (hex, pos)
+						for key, val in self.RingPos.items():
+							if val == brd.moves[0]:
+								val = brd.moves[1]
+
 						state = self.game.check_player_state()
-						move_seq.append(moveS); move_seq.append(moveM)
+						move_seq.append(move_s[0]); move_seq.append(move_s[1])
 						if state != 3:
 							break
+
 				elif state == 2:
 					raise AssertionError("The player state cannot be 2 after a sequence of valid moves")
 				elif state == 3 or state == 6: ## Select Row to Remove (State 6 if other players your row)
-					move_start = self.removeRowStart()
-					success = self.game.execute_move(move_start)
-					if success != 0:
-						while True:
-							move_end = self.removeRowEnd()
-							success = self.game.execute_move(move_end)
-							if success != 0:
-								break
-						state = self.game.check_player_state()
-						move_seq.append(move_start); move_seq.append(move_end);
-				elif state == 4 or state == 7: ## Select Ring to Remove (State 7 if other players your row)
-					move, i = self.removeRing()
-					del self.RingPos[i]
-					self.game.execute_move(move)
-					move_seq.append(move)
-					if state == 7:
-						continue
-					state = self.game.check_player_state()
-					if state != 3:
-						break
+					# move_start = self.removeRowStart()
+					if state == 6:
+						move_s = board.parse_move_reverse(self.board.moves, True)
+
+					for rows_to_remove in range(0, len(move_s)-4, 3):
+						success = self.game.execute_move(move_s[2+rows_to_remove])
+						if success != 0:
+							while True:
+								# move_end = self.removeRowEnd()
+								success = self.game.execute_move(move_s[3+rows_to_remove])
+								if success != 0:
+									break
+							state = self.game.check_player_state()
+							move_seq.append(move_start); move_seq.append(move_end);
+							if state == 4 or state == 7:
+								move = move_s[4+rows_to_remove]
+
+								for k, v in self.RingPos.items():
+									if v == brd.moves[3][rows_to_remove]:
+										del self.RingPos[k]
+
+										break
+
+								self.game.execute_move(move)
+								move_seq.append(move)
+
+								state = self.game.check_player_state()
+						break  #removed all rows and now, chance for next player
+				
+				# elif state == 4 or state == 7: ## Select Ring to Remove (State 7 if other players your row)
+				# 	# move, i = self.removeRing()
+				# 	move = move_s[4+rows_to_remove]
+				# 	# del self.RingPos[i]
+				# 	for k, v in self.RingPos.items():
+				# 		if v == brd.moves[3][rows_to_remove]:
+				# 			del self.RingPos[k]
+				# 			break
+
+				# 	self.game.execute_move(move)
+				# 	move_seq.append(move)
+				# 	if state == 7:
+				# 		continue
+				# 	state = self.game.check_player_state()
+				# 	# if state != 3:
+				# 	# 	break
+
 			self.play_move_seq(move_seq)
 			
 			## Execute Other Player Move Sequence
 			move = sys.stdin.readline().strip()
-			print(move)
 			self.game.execute_move(move)
+			move_split = move.split()
+			if move_split[0] == 'P':
+				if self.player:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
+				else:
+					self.board.state[(int(move_split[1]),int(move_split[2]))] = 'WR'
+				self.rings[self.player].append((int(move_split[1]),int(move_split[2])))
+			else:
+				move_parsed = board.parse_move(move)
+				self.board.execute_move(move_parsed)
 
 random_player = RandomPlayer()
