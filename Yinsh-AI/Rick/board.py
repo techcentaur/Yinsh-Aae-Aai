@@ -1,4 +1,4 @@
-from math import cos, sin, pi, isclose
+from math import cos, sin, pi
 import numpy as np
 import matplotlib.pyplot as plt
 from random import randint

@@ -2,6 +2,7 @@ from game import Game
 import random
 import sys
 import time
+from Rick import algo, board
 
 class RandomPlayer:
 
@@ -12,6 +13,7 @@ class RandomPlayer:
 		self.time_left = int(data[2])
 		self.game = Game(self.n)
 		self.RingPos = {}
+		self.board = board.Board(player=self.player+1)
 		self.play()
 
 	def placeRing(self):
@@ -20,7 +22,6 @@ class RandomPlayer:
 		position = random.randint(0,max(0,6*hexagon-1))
 		if hexagon==self.n and position%self.n==0:
 			position+=1
-		
 		return '{type} {hex} {pos}'.format(type=movetype, hex=hexagon, pos=position), len(self.RingPos), hexagon, position
 
 	def selectRing(self):
@@ -81,6 +82,9 @@ class RandomPlayer:
 					success = self.game.execute_move(moveP)
 					if success != 0:
 						self.RingPos[i] = (hex, pos)
+
+						self.board.rings[self.player].append((hex, pos))
+
 						move_seq.append(moveP)
 						break
 				elif state == 1: ## Select a Ring and the Move to Valid Postion
@@ -122,6 +126,7 @@ class RandomPlayer:
 			
 			## Execute Other Player Move Sequence
 			move = sys.stdin.readline().strip()
+			print(move)
 			self.game.execute_move(move)
 
 random_player = RandomPlayer()
