@@ -14,6 +14,7 @@ class RandomPlayer:
 		self.game = Game(self.n)
 		self.RingPos = {}
 		self.board = board.Board(player=self.player+1)
+		self.algo = algo.Algo()
 		self.play()
 
 	def placeRing(self):
@@ -82,12 +83,16 @@ class RandomPlayer:
 					success = self.game.execute_move(moveP)
 					if success != 0:
 						self.RingPos[i] = (hex, pos)
-
 						self.board.rings[self.player].append((hex, pos))
-
+						if self.player == 1:
+							self.board.state[(hex, pos)] = 'BR'
+						else:
+							self.board.state[(hex, pos)] = 'WR'
 						move_seq.append(moveP)
 						break
 				elif state == 1: ## Select a Ring and the Move to Valid Postion
+					brd = self.algo.min_max(self.board)
+					self.board.state[brd.moves[0]] = 
 					moveS, i = self.selectRing()
 					moveM, hex, pos = self.moveRing()
 					self.game.execute_move(moveS)

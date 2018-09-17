@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from random import randint
 import copy
 
@@ -283,6 +283,29 @@ class Board:
 								flip_markers.append(self.points_inverse[point2])
 
 		return neighbour_boards
+
+	def execute_move(self, moves):
+		lines = self.lines(moves[0])
+		line = None
+		idx = None
+		for idx, line in enumerate(lines):
+			if self.points[moves[1]] in line:
+				break
+
+		for p in line:
+			if self.state[self.points_inverse[p]] is 'BM':
+				self.state[self.points_inverse[p]] = 'WM'
+			elif self.state[self.points_inverse[p]] is 'WM':
+				self.state[self.points_inverse[p]] = 'BM'
+		
+		if self.state[moves[0]]  is 'WR':
+			self.state[moves[0]] = 'WM'
+			self.state[moves[1]] = 'WR'
+		elif self.state[moves[0]]  is 'BR':
+			self.state[moves[0]] = 'BM'
+			self.state[moves[1]] = 'BR'
+
+
 
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board(player = (1 + (1 - self.player)))
