@@ -250,9 +250,11 @@ class Board:
 		return _move_triple_list
 
 	def get_neighbours(self):
+		f = open('neigbhs', 'a')
 		neighbour_boards = []
 
 		for ring in self.rings[self.player]:
+			f.write(str("----------ring whose neighs: ") + str(self.rings) + "\n")
 			points_to_go = {}
 			points_in_lines = self.lines(ring)
 			# points_in_lines = {'0':[(1.2343, 2.00)], '1': [()] ...}
@@ -283,17 +285,20 @@ class Board:
 					flip_markers = []
 					for point2 in points_in_lines[key]:
 						if point1 == point2:
-							neighbour_boards.append(self.make_board(ring, self.points_inverse[point2], flip_markers))
+							f.write(str(" make neighs ") + str(ring) + " " + str(self.points_inverse[point2]) + " " + str(flip_markers) + "\n") 
+							neighbour_boards.append(self.make_board(ring, self.points_inverse[point2], flip_markers, f))
 						else:
 							if self.state[self.points_inverse[point2]] is 'E':
 								pass
 							else:
 								flip_markers.append(self.points_inverse[point2])
 
+		f.close()
 		return neighbour_boards
 
-	def make_board(self, point_at_ring, point_to_go, flip_markers):
+	def make_board(self, point_at_ring, point_to_go, flip_markers, f):
 		new_board = Board(player = (1 + (1 - self.player)))
+		f.write(str(self.player)+ " it neighs player " +  str(new_board.player) + "\n")
 		
 		new_board.state = self.state.copy()
 		new_board.state[point_to_go] = self.state[point_at_ring]
@@ -313,9 +318,12 @@ class Board:
 		new_board.rings[self.player].remove(point_at_ring)
 		new_board.rings[self.player].append(point_to_go)
 		
+		f.write("Rings added: " + str(new_board.rings) + "\n")
+
 		new_board.reach_neighbs_moves += self.get_move_string("S", point_at_ring)
 		new_board.reach_neighbs_moves += self.get_move_string("M", point_to_go)
 
+		f.write("here reached as: "+ str(new_board.reach_neighbs_moves) + "\n")
 
 		# Now check if the newly made board has rows made up in them
 		total_lines = self.all_lines()
@@ -332,6 +340,8 @@ class Board:
 					if count1 == 1:
 						start_index1 = each_line.index(each_point)
 					if count1 == 5:
+						f.write("WM board state of row: " + str(new_board.state) + "with line" + str(each_line) + "\n")
+
 						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index1]])
 						new_board.reach_neighbs_moves += string_move
 
@@ -339,15 +349,16 @@ class Board:
 						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index1]])
 						new_board.reach_neighbs_moves += string_move
 						
-						for ep in each_line[start_index1: end_index1+1]:
-							new_board.state[self.points_inverse[ep]] == 'E'
+						f.write("WM remove 5 rings as " + str(new_board.reach_neighbs_moves) + "\n")
 
-						if len(new_board.rings[0]) < 1:
-							raise IndexError
-						else:
-							string_move = self.get_move_string("X", new_board.rings[0][0])
-							new_board.reach_neighbs_moves += string_move
-							new_board.rings[0].remove(new_board.rings[0][0])
+						for ep in each_line[start_index1: end_index1+1]:
+							new_board.state[self.points_inverse[ep]] = 'E'
+
+						string_move = self.get_move_string("X", new_board.rings[0][0])
+						new_board.reach_neighbs_moves += string_move
+						new_board.rings[0].remove(new_board.rings[0][0])
+
+						f.write("WM new state board: " + str(new_board.state) + "\n")
 
 						count1 = 0
 						break
@@ -358,15 +369,19 @@ class Board:
 					if count2 == 1:
 						start_index2 = each_line.index(each_point)
 					if count2 == 5:
+						f.write("BM board state of row: " + str(new_board.state) + "with line" + str(each_line) + "\n")
+
 						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index2]])
 						new_board.reach_neighbs_moves += string_move
 
 						end_index2 = each_line.index(each_point)
 						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index2]])
 						new_board.reach_neighbs_moves += string_move
-						
+
+						f.write("BM remove 5 rings as " + str(new_board.reach_neighbs_moves) + "\n")
+
 						for ep in each_line[start_index2: end_index2+1]:
-							new_board.state[self.points_inverse[ep]] == 'E'
+							new_board.state[self.points_inverse[ep]] = 'E'
 
 						if len(new_board.rings[1]) < 1:
 							raise IndexError
@@ -374,6 +389,9 @@ class Board:
 							string_move = self.get_move_string("X", new_board.rings[1][0])
 							new_board.reach_neighbs_moves += string_move
 							new_board.rings[1].remove(new_board.rings[1][0])
+
+						f.write("BM new state board: " + str(new_board.state) + "\n")
+
 
 						count2 = 0
 						break
@@ -514,7 +532,7 @@ class Board:
 						state_six_execution += string_move
 						
 						for ep in each_line[start_index1: end_index1+1]:
-							self.state[self.points_inverse[ep]] == 'E'
+							self.state[self.points_inverse[ep]] = 'E'
 
 						try:
 							string_move = self.get_move_string("X", self.rings[0][0])
@@ -541,7 +559,7 @@ class Board:
 						state_six_execution += string_move
 
 						for ep in each_line[start_index2: end_index2+1]:
-							self.state[self.points_inverse[ep]] == 'E'
+							self.state[self.points_inverse[ep]] = 'E'
 
 						try:
 							string_move = self.get_move_string("X", self.rings[1][0])

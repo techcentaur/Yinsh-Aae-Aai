@@ -73,9 +73,6 @@ class RandomPlayer:
                     reach_here_string = self.board.reach_neighbs_moves
                     reach_here_list = self.board.get_move_list(reach_here_string)
 
-                    with open('debug', 'a') as f:
-                        f.write(str(reach_here_string) + " " + str(reach_here_list))
-
                     self.game.execute_move(reach_here_list[0])
                     state = self.game.check_player_state()
                     success = self.game.execute_move(reach_here_list[1])
