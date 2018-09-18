@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from random import randint
 import copy
 
@@ -40,6 +40,7 @@ class Board:
 				y = (y1*(key - t) + y2*t) / key
 
 				points[(key, key*i + t)] = (x, y)
+
 	for i in [(5, i*5) for i in range(6)]:
 		points.pop(i)
 	points = points
@@ -55,8 +56,10 @@ class Board:
 		self.state = {}
 		for k in self.points:
 			self.state[k] = 'E'
-		self.moves = [None, None, [], []]
+
+		self.reach_neighbs_moves = ""
 		self.__utility__ = None
+		self.__eval__ = None
 
 	def lines(self, point):
 		x1, y1 = self.points[point]
@@ -73,7 +76,6 @@ class Board:
 				else:
 					break
 		return points
-
 
 	def all_lines(self):
 		lines = []
@@ -120,7 +122,6 @@ class Board:
 			lines.append([self.points[(self.size, (self.size*i)+1+j)] for j in range(self.size-1)])
 		return lines
 
-
 	def display_points(self, points):
 		xli = []
 		yli = []
@@ -141,7 +142,6 @@ class Board:
 		plt.scatter(x, y, color='red')
 		plt.show()
 
-
 	def display(self):
 		xli = []
 		yli = []
@@ -152,7 +152,6 @@ class Board:
 		y = np.array(yli)
 		plt.scatter(x, y)
 		plt.show()
-
 
 	def normie_f(self):
 		self.state[(1,3)] = 'WR'
@@ -184,7 +183,6 @@ class Board:
 		self.state[(5,24)] = 'BM'
 
 		return True
-
 
 	def display_board(self):
 		E = []
@@ -240,6 +238,17 @@ class Board:
 
 		plt.show()
 
+	def get_move_string(self, _type, point):
+		return "{} {} {} ".format(_type, point[0], point[1])
+
+	def get_move_list(self, _move_string):
+		_move_split = _move_string.split()
+		_move_triple_list = []
+		for i in range(0, len(_move_split), 3):
+			_move_triple_list += [" ".join(_move_split[i: i+3])]
+
+		return _move_triple_list
+
 	def get_neighbours(self):
 		neighbour_boards = []
 
@@ -268,8 +277,7 @@ class Board:
 							break
 						elif self.state[p] is 'BR' or self.state[p] is 'WR':
 							break
-							
-			# Get neighbours board by moving the particular positions. Wubba Lubba Dub Dub!
+						
 			for key in points_in_lines:
 				for point1 in points_to_go[key]:
 					flip_markers = []
@@ -284,134 +292,117 @@ class Board:
 
 		return neighbour_boards
 
-	def execute_move(self, moves, moves_string):
-		if moves_string.startswith('R'):
-			for (p1, p2) in moves[2]:
-				lines = self.lines(p1)
-				line = None
-				idx = None
-				for idx, line in lines.items():
-					if self.points[p2] in line:
-						idx = line.index(self.points[p2])
-						break
-				
-				for p in [self.points[p1]] + line[:idx+1]:
-					self.state[self.points_inverse[p]] = 'E'
-			
-			for pp in moves[3]:
-				self.state[pp] = 'E'
-				self.rings[int(not bool(self.player))].remove(pp)
-	
-
-			lines = self.lines(moves[0])
-			line = None
-			idx = None
-			for idx, line in lines.items():
-				if self.points[moves[1]] in line:
-					idx = line.index(self.points[moves[1]])
-					break
-
-			for p in line[:idx]:
-				if self.state[self.points_inverse[p]] is 'BM':
-					self.state[self.points_inverse[p]] = 'WM'
-				elif self.state[self.points_inverse[p]] is 'WM':
-					self.state[self.points_inverse[p]] = 'BM'
-			
-			if self.state[moves[0]]  is 'WR':
-				self.state[moves[0]] = 'WM'
-				self.state[moves[1]] = 'WR'
-			elif self.state[moves[0]]  is 'BR':
-				self.state[moves[0]] = 'BM'
-				self.state[moves[1]] = 'BR'
-
-			self.rings[int(not bool(self.player))].remove(moves[0])
-			self.rings[int(not bool(self.player))].append(moves[1])
-		else:
-
-			lines = self.lines(moves[0])
-			line = None
-			idx = None
-			for idx, line in lines.items():
-				if self.points[moves[1]] in line:
-					idx = line.index(self.points[moves[1]])
-					break
-
-			for p in line[:idx]:
-				if self.state[self.points_inverse[p]] is 'BM':
-					self.state[self.points_inverse[p]] = 'WM'
-				elif self.state[self.points_inverse[p]] is 'WM':
-					self.state[self.points_inverse[p]] = 'BM'
-			
-			if self.state[moves[0]]  is 'WR':
-				self.state[moves[0]] = 'WM'
-				self.state[moves[1]] = 'WR'
-			elif self.state[moves[0]]  is 'BR':
-				self.state[moves[0]] = 'BM'
-				self.state[moves[1]] = 'BR'
-
-			self.rings[int(not bool(self.player))].remove(moves[0])
-			self.rings[int(not bool(self.player))].append(moves[1])
-
-
-			for (p1, p2) in moves[2]:
-				lines = self.lines(p1)
-				line = None
-				idx = None
-				for idx, line in lines.items():
-					if self.points[p2] in line:
-						idx = line.index(self.points[p2])
-						break
-				
-				for p in [self.points[p1]] + line[:idx+1]:
-					self.state[self.points_inverse[p]] = 'E'
-			
-			for pp in moves[3]:
-				self.state[pp] = 'E'
-				self.rings[int(not bool(self.player))].remove(pp)
-		
-		self.__utility_function__()
-
 	def make_board(self, point_at_ring, point_to_go, flip_markers):
 		new_board = Board(player = (1 + (1 - self.player)))
+		
 		new_board.state = self.state.copy()
 		new_board.state[point_to_go] = self.state[point_at_ring]
-		
-		new_board.rings = copy.deepcopy(self.rings)
-		new_board.rings[self.player].remove(point_at_ring)
-		new_board.rings[self.player].append(point_to_go)
-		new_board.moves[0] = point_at_ring
-		new_board.moves[1] = point_to_go
-		
+
 		if self.state[point_at_ring] is 'WR':
 			new_board.state[point_at_ring] = 'WM'
 		elif self.state[point_at_ring] is 'BR':
 			new_board.state[point_at_ring] = 'BM'
-
+		
 		for mark in flip_markers:
 			if self.state[mark] is 'WM':
 				new_board.state[mark] = 'BM'
 			elif self.state[mark] is 'BM':
 				new_board.state[mark] = 'WM'
 
+		new_board.rings = copy.deepcopy(self.rings)
+		new_board.rings[self.player].remove(point_at_ring)
+		new_board.rings[self.player].append(point_to_go)
+		
+		new_board.reach_neighbs_moves += self.get_move_string("S", point_at_ring)
+		new_board.reach_neighbs_moves += self.get_move_string("M", point_to_go)
+		
+		while True:
+			if self.check_for_rows(new_board):
+				break
+
 		return new_board
 
-	@property
-	def utility(self):
-		if self.__utility__ is not None:
-			return self.__utility__
-		else:
-			return self.__utility_function__()
-			# while True:
-			# 	util = self.__utility_function__()
-			# 	if util is not False:
-			# 		return self.__utility__
 
-	def __utility_function__(self):
+	def check_for_rows(self, boooard):
 		total_lines = self.all_lines()
 
-		p1_mark = 0
-		p2_mark = 0
+		start_index1 = 0; start_index2 = 0
+		end_index1 = 0; end_index2 = 0
 
+		count1 = 0; count2 = 0
+		for each_line in total_lines:
+			for each_point in each_line:
+				if boooard.state[self.points_inverse[each_point]] is 'WM':
+					count1 += 1
+					count2 = 0
+					if count1 == 1:
+						start_index1 = each_line.index(each_point)
+					if count1 == 5:
+						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index1]])
+						boooard.reach_neighbs_moves += string_move
+
+						end_index1 = each_line.index(each_point)
+						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index1]])
+						boooard.reach_neighbs_moves += string_move
+						
+						for ep in each_line[start_index1: end_index1+1]:
+							boooard.state[self.points_inverse[ep]] == 'E'
+
+						try:
+							string_move = self.get_move_string("X", boooard.rings[0][0])
+							boooard.reach_neighbs_moves += string_move
+							boooard.rings[0].remove(boooard.rings[0][0])
+						except IndexError:
+							with open('debug4', 'a') as f:
+								f.write(str(boooard.rings))
+
+						count1 = 0
+						return False
+				
+				elif boooard.state[self.points_inverse[each_point]] is 'BM':
+					count2 += 1
+					count1 = 0
+					if count2 == 1:
+						start_index2 = each_line.index(each_point)
+					if count2 == 5:
+						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index2]])
+						boooard.reach_neighbs_moves += string_move
+
+						end_index2 = each_line.index(each_point)
+						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index2]])
+						boooard.reach_neighbs_moves += string_move
+						
+						for ep in each_line[start_index2: end_index2+1]:
+							boooard.state[self.points_inverse[ep]] == 'E'
+
+						try:
+							string_move = self.get_move_string("X", boooard.rings[1][0])
+							boooard.reach_neighbs_moves += string_move
+							boooard.rings[1].remove(boooard.rings[1][0])
+						except IndexError:
+							with open('debug5', 'a') as f:
+								f.write(str(boooard.rings))
+
+						count2 = 0
+						return False
+
+				else:
+					count1 = 0
+					count2 = 0
+
+		return True
+
+	@property
+	def eval(self):
+		if self.__eval__ is not None:
+			return self.__eval__
+		else:
+			return self.__eval_it__()
+
+	def __eval_it__(self):
+		total_lines = self.all_lines()
+
+		p1_mark = 0; p2_mark = 0
 		for verti in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
 			for coord in total_lines[verti]:
 				mark = self.state[self.points_inverse[coord]]
@@ -422,261 +413,164 @@ class Board:
 
 		p1 = 0; p1_row = 0
 		p2 = 0; p2_row = 0
-		start_row_index_p1 = None
-		start_row_index_p2 = None
 
-		for l in total_lines:
-			for p in l:
-				if self.state[self.points_inverse[p]] is 'WM':
+		_amount = 2
+
+		for each_line in total_lines:
+			for each_point in each_line:
+				if self.state[self.points_inverse[each_point]] is 'WM':
 					p1 = p1 + 1
-					p2_row = p2_row + (p2+p2)
+					p2_row = p2_row + _amount*(p2+p2)
 					p2 = 0
-
-
-					if p1 == 1:
-						start_row_index_p1 = l.index(p)
-
-					if p1 >= 5:
-						# self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1+4]]))
-						# for iii in range(start_row_index_p1, start_row_index_p1+5):
-						# 	self.state[self.points_inverse[l[iii]]] = 'E'
-						try:
-							self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1+4]]))
-						except IndexError:
-							try:
-								self.moves[2].append((self.points_inverse[l[start_row_index_p1]], self.points_inverse[l[start_row_index_p1-4]]))
-							except IndexError:
-								pass
-
-						
-						try:
-							xx = l[start_row_index_p1 + 5]
-							for iii in range(start_row_index_p1, start_row_index_p1+5):
-								self.state[self.points_inverse[l[iii]]] = 'E'
-						except IndexError:
-							for iii in range(start_row_index_p1, start_row_index_p1-5, -1):
-								self.state[self.points_inverse[l[iii]]] = 'E'
-
-
-						pll = int( not bool(self.player))
-						self.state[self.rings[pll][len(self.rings[pll])-1]] = 'E'
-						self.moves[3].append(self.rings[pll][len(self.rings[pll])-1])
-						self.rings[pll].pop()
-						p1 = 0
-						start_row_index_p1 = None
-
-				elif self.state[self.points_inverse[p]] is 'BM':
+				elif self.state[self.points_inverse[each_point]] is 'BM':
 					p2 = p2 + 1
-					p1_row = p1_row + (p1+p1)
+					p1_row = p1_row + _amount*(p1+p1)
 					p1 = 0
-
-					if p2 == 1:
-						start_row_index_p2 = l.index(p)
-
-					if p2 >= 5:
-						try:
-							self.moves[2].append((self.points_inverse[l[start_row_index_p2]], self.points_inverse[l[start_row_index_p2+4]]))
-						except IndexError:
-							try:
-								self.moves[2].append((self.points_inverse[l[start_row_index_p2]], self.points_inverse[l[start_row_index_p2-4]]))
-							except IndexError:
-								pass
-						
-						try:
-							xx = l[start_row_index_p2 + 5]
-							for iii in range(start_row_index_p2, start_row_index_p2+5):
-								self.state[self.points_inverse[l[iii]]] = 'E'
-						except IndexError:
-							for iii in range(start_row_index_p2, start_row_index_p2-5, -1):
-								self.state[self.points_inverse[l[iii]]] = 'E'
-
-
-						# self.state[self.rings[self.player][len(self.rings[self.player])-1]] = 'E'
-						# self.moves[3].append(self.rings[self.player][len(self.rings[self.player])-1])
-						# self.rings[self.player].pop()
-
-						pll = int( not bool(self.player))
-						self.state[self.rings[pll][len(self.rings[pll])-1]] = 'E'
-						self.moves[3].append(self.rings[pll][len(self.rings[pll])-1])
-						self.rings[pll].pop()
-						p2 = 0
-						start_row_index_p2 = None
-
 				else:
 					p1_row = p1_row + (p1+p1)
 					p2_row = p2_row + (p2+p2)
 					p1 = 0
 					p2 = 0
-					start_row_index_p1 = None
-					start_row_index_p2 = None
 
-		player1_score = 5*p1_mark + p1_row
-		player2_score = 5*p2_mark + p2_row
+		player1_score = _amount*2*p1_mark + p1_row + 10*(5-len(self.rings[0]))
+		player2_score = _amount*2*p2_mark + p2_row + 10*(5-len(self.rings[1]))
 
 		if self.player:
 			score = player1_score - player2_score
 		else:
 			score = player2_score - player1_score
 
-		self.__utility__ = score
+		self.__eval__ = score
 		return score
 
-	# def __utility_function__(self):
-	# 	# print('calcultatin utility...')
-	# 	all_lines = self.all_lines() # get all directional lines
-		
-	# 	player1_markers = 0
-	# 	player2_markers = 0
 
-	# 	for vertical_line_index in [18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31]:
-	# 		for coordinate in all_lines[vertical_line_index]:
-	# 			mark = self.state[self.points_inverse[coordinate]]
-	# 			if mark is 'WM':
-	# 				player1_markers += 1
-	# 			elif mark is 'BM':
-	# 				player2_markers += 1 
 
-	# 	p1 = 0; p1_row = 0; player1_continous_flag = False
-	# 	p2 = 0; p2_row = 0; player2_continous_flag = False
+	def execute_move(self, todo_moves_string):
+		todo_move_list = self.get_move_list(todo_moves_string)
 
-	# 	# print('all lines are: ', len(all_lines))
-	# 	for inddd, line in enumerate(all_lines):
-	# 		for indx, point in enumerate(line):
-	# 			if self.state[self.points_inverse[point]] is 'WM':
-	# 				p1 += 1
-	# 				p2 = 0
-	# 				if p1 == 1:
-	# 					start_row = indx
-	# 					with open('starter_row', 'a') as f:
-	# 						f.write(str(start_row) + " " + str(point) + "\n")
-	# 				player1_continous_flag = True; player2_continous_flag = False
-	# 				if p1 >= 5 and player1_continous_flag:
-	# 					# 5 continous markers -> a row, give high score
-	# 					with open('print out row', 'a') as f:
-	# 						f.write(str(line) + " " + str(start_row) + "\n")
-	# 					self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
-	# 					for index, p in enumerate(line[start_row: start_row+5]):
-	# 						self.state[self.points_inverse[p]] = 'E'
+		for todo_index in range(0, len(todo_move_list)):
+			if todo_move_list[todo_index].startswith("S"):
+				_S = todo_move_list[todo_index].split()
+				_M = todo_move_list[todo_index + 1].split()
 
-	# 					with open('rings', 'w') as f:
-	# 						f.write(str(self.rings))
-	# 					x = randint(0, len(self.rings[self.player])-1)
-	# 					self.moves[3].append(self.rings[self.player][x])
-	# 					self.state[self.rings[self.player][x]] = 'E'
-	# 					del self.rings[self.player][x]
-	# 					p1_row = 20
-	# 					return False
-	# 			elif self.state[self.points_inverse[point]] is 'BM':
-	# 				p2 += 1
-	# 				p1 = 0
-	# 				if p2 == 1:
-	# 					start_row = indx
-	# 					with open('starter_row 2', 'a') as f:
-	# 						f.write(str(start_row) + " " + str(point) + "\n")
-	# 				player1_continous_flag = False; player2_continous_flag = True
-	# 				if p2 >= 5 and player2_continous_flag:
-	# 					# 5 continous markers -> a row, give low score
-	# 					with open('print out row 2', 'a') as f:
-	# 						f.write(str(line) + " " + str(start_row) + "\n")
-	# 					self.moves[2].append((self.points_inverse[line[start_row]], self.points_inverse[line[start_row+4]]))
-	# 					for index, p in enumerate(line[start_row: start_row+5]):
-	# 						self.state[self.points_inverse[p]] = 'E'
+				select_ring = (int(_S[1]), int(_S[2]))
+				move_ring = (int(_M[1]), int(_M[2]))
+				
+				directed_lines = self.lines(select_ring)
+				
+				for direction, each_line in directed_lines.items():
+					if self.points[move_ring] in each_line:
+						end_index = each_line.index(self.points[move_ring])
+						for p in each_line[:end_index]:
+							if self.state[self.points_inverse[p]] is 'BM':
+								self.state[self.points_inverse[p]] = 'WM'
+							elif self.state[self.points_inverse[p]] is 'WM':
+								self.state[self.points_inverse[p]] = 'BM'
+						break
 
-	# 					x = randint(0, len(self.rings[self.player])-1)
-	# 					self.moves[3].append(self.rings[self.player][x])
-	# 					self.state[self.rings[self.player][x]] = 'E'
-	# 					del self.rings[self.player][x]
+				if self.state[select_ring]  is 'WR':
+					self.state[select_ring] = 'WM'
+					self.state[move_ring] = 'WR'
+				elif self.state[select_ring]  is 'BR':
+					self.state[select_ring] = 'BM'
+					self.state[move_ring] = 'BR'
 
-	# 					p2_row = 20
-	# 					return False
-	# 			else:
-	# 				p1 = 0
-	# 				p2 = 0
-	# 				player1_continous_flag = False; player2_continous_flag = False
-	# 	# print('out of loop')
-	# 	player1_score = player1_markers + p1_row
-	# 	player2_score = player2_markers + p2_row
-	# 	# print(player1_score)
-	# 	# print(player2_score)
+				self.rings[int(not bool(self.player))].remove(select_ring)
+				self.rings[int(not bool(self.player))].append(move_ring)
 
-	# 	if self.player:
-	# 		score = player1_score - player2_score
-	# 	else:
-	# 		score = player2_score - player1_score
+			elif todo_move_list[todo_index].startswith("RS"):
+				_RS = todo_move_list[todo_index].split()
+				_RE = todo_move_list[todo_index+1].split()
+				_X = todo_move_list[todo_index+2].split()
 
-	# 	self.__utility__ = score
-	# 	# print(score)
-	# 	# print(self.__utility__)
-	# 	return self.__utility__
+				ring_start = (int(_RS[1]), int(_RS[2]))
+				ring_end = (int(_RE[1]), int(_RE[2]))
+				ring_remove = (int(_X[1]), int(_X[2]))
 
-# if __name__ == '__main__':
-	# b = Board()
-	# b.normie_f()
-	# b.display_board()
-	# b.get_neighbours((3,4))
-	# b.display_board()
-	# print(b.utility)
-	# print(b.player)
-	# b.display_board()
-	# print(len(b.get_neighbours()))
-	# for n in b.get_neighbours():
-	# 	n.display_board()
-	# print(b.utility)
-	# b.display_board()
-	# b.execute_move([(1,3), (0,0), [], []])	
-	# b.display_board()
+				start_index = self.points[ring_start]
 
-	# b.execute_move([(3,4), (5,3), [((4,2), (4,0))], [(0,0)]])
+				directed_lines = self.lines(ring_start)
+				for direction, each_line in directed_lines.items():
+					if self.points[ring_end] in each_line:
+						end_index = each_line.index(self.points[ring_end])
+						for p in each_line[start_index: end_index+1]:
+							self.state[self.points_inverse[p]] = 'E'
+						break
 
-	# b.display_board()
+				self.rings[int(not bool(self.player))].remove(ring_remove)
 
-def parse_move(move):
-	ms = move.split()
-	msp = []
-	parsed_moves = [None, None, [], []]
-	for i in range(int(len(ms)/3)):
-		msp.append(ms[i*3:(i+1)*3])
+	def state_six(self):
+		total_lines = self.all_lines()	
+		state_six_execution = ""
 
-	row = [None, None]
-	for index, i in enumerate(msp):
-		if i[0] == 'S':
-			parsed_moves[0] = (int(i[1]), int(i[2]))
-		elif i[0] == 'M':
-			parsed_moves[1] = (int(i[1]), int(i[2]))
-		elif i[0] == 'RS':
-			row[0] = (int(i[1]), int(i[2]))
-		elif i[0] == 'RE':
-			row[1] = (int(i[1]), int(i[2]))
-			if row[0] and row[1]:
-				parsed_moves[2].append((row[0], row[1]))
-		elif i[0] == 'X':
-			parsed_moves[3].append((int(i[1]), int(i[2])))
-	return parsed_moves
+		start_index1 = 0; start_index2 = 0
+		end_index1 = 0; end_index2 = 0
 
-def parse_move_reverse(move, in_list=False):
+		count1 = 0; count2 = 0
+		for each_line in total_lines:
+			for each_point in each_line:
+				if self.state[self.points_inverse[each_point]] is 'WM':
+					count1 += 1
+					count2 = 0
+					if count1 == 1:
+						start_index1 = each_line.index(each_point)
+					if count1 == 5:
+						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index1]])
+						state_six_execution += string_move
 
-	ms = []
-	ms.append('S {} {}'.format(move[0][0], move[0][1]))
-	ms.append('M {} {}'.format(move[1][0], move[1][1]))
-	for i in move[2]:
-		ms.append('RS {} {}'.format(i[0][0], i[0][1]))
-		ms.append('RE {} {}'.format(i[1][0], i[1][1]))
-	for i in move[3]:
-		ms.append('X {} {}'.format(i[0], i[1]))
+						end_index1 = each_line.index(each_point)
+						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index1]])
+						state_six_execution += string_move
+						
+						for ep in each_line[start_index1: end_index1+1]:
+							self.state[self.points_inverse[ep]] == 'E'
 
-	if not in_list:
-		return " ".join(ms)
-	else:
-		return ms
+						try:
+							string_move = self.get_move_string("X", self.rings[0][0])
+							state_six_execution += string_move
+							self.rings[0].remove(self.rings[0][0])
+						except IndexError:
+							with open('debug2', 'a') as f:
+								f.write(str(self.rings))
 
+						count1 = 0
+						break
+				
+				elif self.state[self.points_inverse[each_point]] is 'BM':
+					count2 += 1
+					count1 = 0
+					if count2 == 1:
+						start_index2 = each_line.index(each_point)
+					if count2 == 5:
+						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index2]])
+						state_six_execution += string_move
+
+						end_index2 = each_line.index(each_point)
+						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index2]])
+						state_six_execution += string_move
+
+						for ep in each_line[start_index2: end_index2+1]:
+							self.state[self.points_inverse[ep]] == 'E'
+
+						try:
+							string_move = self.get_move_string("X", self.rings[1][0])
+							state_six_execution += string_move
+							self.rings[1].remove(self.rings[1][0])
+						except IndexError:
+							with open('debug2', 'a') as f:
+								f.write(str(self.rings))
+
+						count2 = 0
+						break
+
+				else:
+					count1 = 0
+					count2 = 0
+		return state_six_execution
 
 
 if __name__ == '__main__':
-	# print(parse_move("RS 3 5 RE 3 10 X 5 26 S 3 8 M 4 7"))
 	b = Board()
 	b.normie_f()
 	b.display_board()
-
-# print(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7'))
-# print(parse_move_reverse(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7')))
-# print(parse_move_reverse(parse_move('S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7'), True))
+	
