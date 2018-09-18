@@ -16,7 +16,15 @@ class Algo:
 		beta_init = sys.float_info.max
 
 		child_val, brd = self.max_value(board, alpha_init, beta_init, depth)
-		
+		if child_val is None and brd is None:
+			neighbs = board.get_neighbours()
+			max_eval = [x.eval for x in neighbs]
+			try:
+				max_e =  max(max_eval)
+			except ValueError:
+				with open('stup', 'a') as f:
+					f.write(str(board.state) + "\n\n" + str(board.rings) + "\n\n")
+				board.display_board()
 		return brd
 
 	def is_terminal(self, depth):
@@ -34,13 +42,17 @@ class Algo:
 			if alpha >= beta:
 				return child_value, brd
 
-		if len(neighbs) == 0:
-			board.display_board()
-			with open('cool bug', 'a') as f:
-				f.write(str(board.state) + "\n\n" + str(board.player) + "\n\n" + str(board.reach_neighbs_moves) + "\n\n" + str(board.rings))
+		# if len(neighbs) == 0:
+		# 	board.display_board()
+		# 	with open('cool bug', 'a') as f:
+		# 		f.write(str(board.state) + "\n\n" + str(board.player) + "\n\n" + str(board.reach_neighbs_moves) + "\n\n" + str(board.rings))
+
 
 		max_eval = [x.eval for x in neighbs]
-		max_e =  max(max_eval)
+		try:
+			max_e =  max(max_eval)
+		except ValueError:
+			return None, None
 		return max_e, neighbs[max_eval.index(max_e)]
 
 

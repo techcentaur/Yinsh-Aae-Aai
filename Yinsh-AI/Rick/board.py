@@ -277,7 +277,7 @@ class Board:
 							break
 						elif self.state[p] is 'BR' or self.state[p] is 'WR':
 							break
-						
+			
 			for key in points_in_lines:
 				for point1 in points_to_go[key]:
 					flip_markers = []
@@ -315,15 +315,9 @@ class Board:
 		
 		new_board.reach_neighbs_moves += self.get_move_string("S", point_at_ring)
 		new_board.reach_neighbs_moves += self.get_move_string("M", point_to_go)
-		
-		while True:
-			if self.check_for_rows(new_board):
-				break
-
-		return new_board
 
 
-	def check_for_rows(self, boooard):
+		# Now check if the newly made board has rows made up in them
 		total_lines = self.all_lines()
 
 		start_index1 = 0; start_index2 = 0
@@ -332,65 +326,63 @@ class Board:
 		count1 = 0; count2 = 0
 		for each_line in total_lines:
 			for each_point in each_line:
-				if boooard.state[self.points_inverse[each_point]] is 'WM':
+				if new_board.state[self.points_inverse[each_point]] is 'WM':
 					count1 += 1
 					count2 = 0
 					if count1 == 1:
 						start_index1 = each_line.index(each_point)
 					if count1 == 5:
 						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index1]])
-						boooard.reach_neighbs_moves += string_move
+						new_board.reach_neighbs_moves += string_move
 
 						end_index1 = each_line.index(each_point)
 						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index1]])
-						boooard.reach_neighbs_moves += string_move
+						new_board.reach_neighbs_moves += string_move
 						
 						for ep in each_line[start_index1: end_index1+1]:
-							boooard.state[self.points_inverse[ep]] == 'E'
+							new_board.state[self.points_inverse[ep]] == 'E'
 
-						try:
-							string_move = self.get_move_string("X", boooard.rings[0][0])
-							boooard.reach_neighbs_moves += string_move
-							boooard.rings[0].remove(boooard.rings[0][0])
-						except IndexError:
-							with open('debug4', 'a') as f:
-								f.write(str(boooard.rings))
+						if len(new_board.rings[0]) < 1:
+							raise IndexError
+						else:
+							string_move = self.get_move_string("X", new_board.rings[0][0])
+							new_board.reach_neighbs_moves += string_move
+							new_board.rings[0].remove(new_board.rings[0][0])
 
 						count1 = 0
-						return False
+						break
 				
-				elif boooard.state[self.points_inverse[each_point]] is 'BM':
+				elif new_board.state[self.points_inverse[each_point]] is 'BM':
 					count2 += 1
 					count1 = 0
 					if count2 == 1:
 						start_index2 = each_line.index(each_point)
 					if count2 == 5:
 						string_move = self.get_move_string("RS", self.points_inverse[each_line[start_index2]])
-						boooard.reach_neighbs_moves += string_move
+						new_board.reach_neighbs_moves += string_move
 
 						end_index2 = each_line.index(each_point)
 						string_move = self.get_move_string("RE", self.points_inverse[each_line[end_index2]])
-						boooard.reach_neighbs_moves += string_move
+						new_board.reach_neighbs_moves += string_move
 						
 						for ep in each_line[start_index2: end_index2+1]:
-							boooard.state[self.points_inverse[ep]] == 'E'
+							new_board.state[self.points_inverse[ep]] == 'E'
 
-						try:
-							string_move = self.get_move_string("X", boooard.rings[1][0])
-							boooard.reach_neighbs_moves += string_move
-							boooard.rings[1].remove(boooard.rings[1][0])
-						except IndexError:
-							with open('debug5', 'a') as f:
-								f.write(str(boooard.rings))
+						if len(new_board.rings[1]) < 1:
+							raise IndexError
+						else:
+							string_move = self.get_move_string("X", new_board.rings[1][0])
+							new_board.reach_neighbs_moves += string_move
+							new_board.rings[1].remove(new_board.rings[1][0])
 
 						count2 = 0
-						return False
+						break
 
 				else:
 					count1 = 0
 					count2 = 0
 
-		return True
+		return new_board
 
 	@property
 	def eval(self):
@@ -487,13 +479,12 @@ class Board:
 				ring_end = (int(_RE[1]), int(_RE[2]))
 				ring_remove = (int(_X[1]), int(_X[2]))
 
-				start_index = self.points[ring_start]
-
 				directed_lines = self.lines(ring_start)
 				for direction, each_line in directed_lines.items():
+					each_line = [self.points[ring_start]] + each_line
 					if self.points[ring_end] in each_line:
 						end_index = each_line.index(self.points[ring_end])
-						for p in each_line[start_index: end_index+1]:
+						for p in each_line[0: end_index+1]:
 							self.state[self.points_inverse[p]] = 'E'
 						break
 
