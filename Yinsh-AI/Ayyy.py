@@ -19,7 +19,10 @@ class RandomPlayer:
         self.game = Game(self.n, self.seq)
         self.RingPos = {}
         self.board = board.Board(player=self.player+1, size=self.n, row_length=self.seq)
-        self.algo = algo.Algo()
+        if self.n==6 and self.seq==5:
+            self.algo = algo.SecretAlgo()
+        else:
+            self.algo = algo.Algo()
         self.play()
 
     def placeRing(self):
@@ -50,25 +53,43 @@ class RandomPlayer:
 
         while True: # Keep playing moves till game is over
             move_seq = []
+            ring_placement_counter = 0
 
             while True: # Loop till valid move sequence is found
                 state = self.game.check_player_state()
                 if state == 0: ## Place Rings
-                    moveP, i, hex, pos = self.placeRing()
-                    success = self.game.execute_move(moveP)
-
-                    if success != 0:
-                        self.RingPos[i] = (hex, pos)
-                        self.board.rings[self.player].append((hex, pos))
+                    if self.n == 6 and self.seq == 5:
+                        self.RingPos[ring_placement_counter] = (6, (ring_placement_counter*6)+1)
+                        self.board.rings[self.player].append((6, (ring_placement_counter*6)+1))
                         if self.player == 1:
-                            self.board.state[(hex, pos)] = 'BR'
+                            self.board.state[self.RingPos[ring_placement_counter]] = 'BR'
                         else:
-                            self.board.state[(hex, pos)] = 'WR'
+                            self.board.state[self.RingPos[ring_placement_counter]] = 'WR'
                         move_seq.append(moveP)
-                        break
+                        ring_placement_counter+=1
+
+                    else:    
+                        moveP, i, hex, pos = self.placeRing()
+                        success = self.game.execute_move(moveP)
+
+                        if success != 0:
+                            self.RingPos[i] = (hex, pos)
+                            self.board.rings[self.player].append((hex, pos))
+                            if self.player == 1:
+                                self.board.state[(hex, pos)] = 'BR'
+                            else:
+                                self.board.state[(hex, pos)] = 'WR'
+                            move_seq.append(moveP)
+                            break
 
                 elif state == 1: ## Select a Ring and the Move to Valid Postion
+                    if self.n == 6 and self.seq == 5:
+                        
+                    else:
+                        pass
+
                     brd = self.algo.min_max(self.board)
+                    
                     brd.player = self.board.player
                     self.board = brd
                     
