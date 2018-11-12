@@ -10,7 +10,8 @@ class RandomPlayer:
 		self.player = int(data[0]) - 1 # player can have values 0 and 1
 		self.n = int(data[1]) # n can have values 5, 6, or 7
 		self.time_left = int(data[2])
-		self.game = Game(self.n)
+		self.seq = int(data[3])
+		self.game = Game(self.n, self.seq)
 		self.RingPos = {}
 		self.play()
 
@@ -20,7 +21,6 @@ class RandomPlayer:
 		position = random.randint(0,max(0,6*hexagon-1))
 		if hexagon==self.n and position%self.n==0:
 			position+=1
-		
 		return '{type} {hex} {pos}'.format(type=movetype, hex=hexagon, pos=position), len(self.RingPos), hexagon, position
 
 	def selectRing(self):

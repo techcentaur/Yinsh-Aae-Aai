@@ -2,7 +2,8 @@ from game import Game
 import random
 import sys
 import time
-from Rick import algo, board
+import algo
+import board
 
 import signal
 
@@ -14,9 +15,10 @@ class RandomPlayer:
         self.player = int(data[0]) - 1 # player can have values 0 and 1
         self.n = int(data[1]) # n can have values 5, 6, or 7
         self.time_left = int(data[2])
-        self.game = Game(self.n)
+        self.seq = int(data[3])
+        self.game = Game(self.n, self.seq)
         self.RingPos = {}
-        self.board = board.Board(player=self.player+1)
+        self.board = board.Board(player=self.player+1, size=self.n, row_length=self.seq)
         self.algo = algo.Algo()
         self.play()
 
@@ -116,6 +118,7 @@ class RandomPlayer:
 
                     state = self.game.check_player_state()
                     move_seq.append(execute_move_list[second_counter]); move_seq.append(execute_move_list[1+second_counter]);
+
                 elif state == 7:
                     move = execute_move_list[2+second_counter]
                     self.game.execute_move(move)
@@ -126,6 +129,9 @@ class RandomPlayer:
                         second_counter += 3
                     else:
                         second_counter = 0
+
+                    if len(self.board.rings[self.player]) <= 2:
+                        break
 
             self.play_move_seq(move_seq)
             

@@ -1,5 +1,9 @@
+from __future__ import print_function 
+
+import copy
 import json
 import math
+from multiset import Multiset
 import numpy as np
 import os
 import sys
@@ -21,12 +25,13 @@ TEMPLATE_ENVIRONMENT = Environment(
 def render_template(template_filename, context):
 	return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
  
-def create_index_html(size, rings, rows):
+def create_index_html(size, rings, rows, seq):
 	fname = "Yinsh.html"
 	context = {
 		'size': size,
 		'rings': rings,
-		'rows': rows
+		'rows': rows,
+		'seq': seq
 	}
 	with open(fname, 'w') as f:
 		html = render_template('index.html', context)
@@ -34,7 +39,7 @@ def create_index_html(size, rings, rows):
 
 class Game:
 
-	def __init__(self, n, mode='CUI', time=120):
+	def __init__(self, n, seq, mode='CUI', time=120):
 		if n in board_sizes:
 			self.rings = int(n)
 			self.board_size = board_sizes[n]
@@ -43,7 +48,7 @@ class Game:
 			raise AssertionError("Number of rings must be either 5, 6 or 7")
 		
 		# Setup Driver
-		create_index_html(self.display_size, n, self.board_size)
+		create_index_html(self.display_size, n, self.board_size, seq)
 		chrome_options = Options()
 		chrome_options.add_argument("--disable-infobars")
 		if mode != 'GUI':
@@ -53,9 +58,11 @@ class Game:
 		self.driver.get("file:" + abs_path)
 		self.driver.set_window_size(width=self.display_size, height=(self.display_size+60))
 
-		self.spacing = float(self.display_size)/self.board_size 
+		self.spacing = float(self.display_size)/self.board_size
+		self.altitude = self.spacing * math.sqrt(3)/2 
 		self.centerx = int(self.display_size)/2
 		self.centery = int(self.display_size)/2
+		self.rows = self.board_size
 
 		self.timer = time # Useful to optimise bot strategy
 
@@ -93,6 +100,87 @@ class Game:
 	def get_current_player(self):
 		return self.driver.execute_script('return current_player;')
 
+	def validMovesDir(self,xcoord, ycoord, asign, bsign):
+		validMoves = set()
+		positions = list(self.driver.execute_script('return positions;'))
+		token_line = 0
+		a = asign
+		b = bsign
+		while(xcoord+a>=0 and xcoord+a<self.rows and ycoord+b>=0 and ycoord+b<self.rows and abs(positions[xcoord+a][ycoord+b]['piece'])!=2 and positions[xcoord+a][ycoord+b]['x']!=-1):
+			if(positions[xcoord+a][ycoord+b]['piece']!=0):
+				token_line = 1
+				a += asign
+				b += bsign
+				continue
+
+			validMoves.add((xcoord, ycoord, xcoord+a, ycoord+b))
+
+			if(token_line == 1):
+				break
+
+			a += asign
+			b += bsign
+	
+		return validMoves
+
+	def getAllValidMoves(self, ringPos):
+		validMoves = set()
+
+		for ring_num in ringPos:
+			# print('Ring Num: '+str(ring_num), file=sys.stderr)
+			ring = ringPos[ring_num]
+			board_ring_x, board_ring_y = self.hexpos2pos_coord(ring[0], ring[1])
+			validMoves = validMoves.union(self.validMoveRing(board_ring_x, board_ring_y))
+
+		return validMoves
+
+	def boardToHexMap(self, n):
+		m = dict()
+		for i in range(n+1):
+			num_points_x = max(1, i*6)
+			for j in range(num_points_x):
+				pos = self.hexpos2pos_coord(i,j)        
+				if(pos == None):
+					continue
+				x, y = pos
+				m[(x,y)] = i, j
+
+		return m
+
+	def validMoveRing(self, ringx, ringy):
+		## These must be board coordinates
+		validMoves = set()
+		v1 = self.validMovesDir(ringx, ringy, 1,1)
+		v2 = self.validMovesDir(ringx, ringy, -1,-1)
+		v3 = self.validMovesDir(ringx, ringy, 0,1)
+		v4 = self.validMovesDir(ringx, ringy, 1,0)
+		v5 = self.validMovesDir(ringx, ringy, 0,-1)
+		v6 = self.validMovesDir(ringx, ringy, -1,0)
+
+		return validMoves.union(v1).union(v2).union(v3).union(v4).union(v5).union(v6)
+
+	def hexpos2boardcoord(self, hexagon, point) :
+		if (hexagon == 0) :
+				return np.array([self.centerx, self.centery])
+		else :
+			if (point % hexagon == 0) :
+				return self.get_corner_coord(point / hexagon, hexagon)
+			else :
+				return self.get_non_corner_coord(point // hexagon, point // hexagon + 1, point % hexagon, hexagon)
+
+	def board2pos_coord(self, xcoord, ycoord) :
+		positions = list(self.driver.execute_script('return positions;'))
+		for i in range(self.rows): #(var i=0;i<rows;i++){
+			for j in range(self.rows): #(var j=0;j<rows;j++)
+				if(positions[i][j]['x'] == -1):
+					continue
+				if(positions[i][j]['x'] - self.altitude/2 < xcoord and positions[i][j]['x'] + self.altitude/2 > xcoord and positions[i][j]['y'] - self.altitude/2 < ycoord and positions[i][j]['y'] + self.altitude/2 > ycoord):
+					return (i,j)
+
+	def hexpos2pos_coord(self, hex, pos):
+		board_coord = self.hexpos2boardcoord(hex, pos)
+		return self.board2pos_coord(board_coord[0], board_coord[1])
+
 	### Score Class
 	# 3-0: 10
 	# 3-1: 9
@@ -110,9 +198,15 @@ class Game:
 
 	def calculate_score(self, rA, rB, mA, mB, Error_state):
 		if Error_state == '1':
-			rA = 0; rB = 3
+			rB = 3
 		elif Error_state == '2':
-			rB = 0; rA = 3
+			rA = 3
+
+		if rB == 5:
+			rB = 0
+		if rA == 5:
+			rA = 0
+
 		if rA == 3:
 			scoreA = 10 - rB; scoreB = rB
 		elif rB == 3:
@@ -175,6 +269,134 @@ class Game:
 			return 0
 		return success
 
+	def sign(self, x):
+		if(x == 0):
+			return 0
+		else:
+			return x / abs(x)
+
+	def updatePositions(self, positions, move, current_player):
+		rows = self.rows
+		xring, yring, destx, desty = move
+		asign = self.sign(destx-xring)
+		bsign = self.sign(desty-yring)
+		a = int(asign)
+		b = int(bsign)
+		xring = int(xring); yring = int(yring)
+		flip = 1
+		while (xring+a >= 0 and xring+a < rows and yring+b >= 0 and yring+b < rows and abs(positions[int(xring+a)][int(yring+b)]['piece'] != 2 and positions[int(xring+a)][int(yring+b)] != -1)):
+			if(positions[int(xring+a)][int(yring+b)]['piece'] == 0):
+				if(xring+a == destx and yring+b == desty):
+					positions[xring][yring]['piece'] = 1 if(current_player == 0) else -1
+					positions[destx][desty]['piece'] = 2 if(current_player == 0) else -2
+					flip = 0
+		
+			if (flip == 1 and abs(positions[int(xring+a)][int(yring+b)]['piece']) == 1):
+				positions[int(xring+a)][int(yring+b)]['piece'] *= -1
+			
+			a += asign
+			b += bsign
+
+		return positions
+
+	def get_len_around(self, i, j, marker_val, ring_val, a_, b_, rows, positions):
+		a = a_
+		b = b_
+		c = 0
+
+		while (i+a >= 0 and i+a < rows and j+b >= 0 and j+b < rows):
+			if (positions[i+a][j+b]['piece'] != marker_val and positions[i+a][j+b] != ring_val):
+				break
+			a += a_
+			b += b_
+			c += 1
+
+		return c
+
+	def get_max_length_created(self, positions, rows, rings, marker_val, ring_val, xring, yring, destx, desty, asign, bsign, m):
+		a = 0
+		b = 0
+		wrong_changes = 0
+		correct_changes = 0
+		max_len = 0
+		while (xring+a >= 0 and xring+a < rows and yring+b >= 0 and yring+b < rows and positions[int(xring+a)][int(yring+b)] != -1):
+			i = int(xring+a)
+			j = int(yring+b)
+			
+			if (positions[i][j]['piece'] == marker_val or positions[i][j]['piece'] == ring_val):
+				len1 = self.get_len_around(i, j, marker_val, ring_val, 1, 1, rows, positions)
+				len2 = self.get_len_around(i, j, marker_val, ring_val, -1, -1, rows, positions)
+				len3 = self.get_len_around(i, j, marker_val, ring_val, 0, 1, rows, positions)
+				len4 = self.get_len_around(i, j, marker_val, ring_val, 0, -1, rows, positions)
+				len5 = self.get_len_around(i, j, marker_val, ring_val, 1, 0, rows, positions)
+				len6 = self.get_len_around(i, j, marker_val, ring_val, -1, 0, rows, positions)
+				max_len = max(max_len, len1+len2+1, len3+len4+1, len5+len6+1)
+				correct_changes += 1
+				# print('Position %s %d'%(str(m[(i, j)]), positions[i][j]['piece']), file=sys.stderr)
+				# print('Lengths created %d %d %d %d %d %d %d'%(len1, len2, len3, len4, len5, len6, max_len), file=sys.stderr)
+			else :
+				# print('Position %s %d'%(str(m[(i, j)]), positions[i][j]['piece']), file=sys.stderr)
+				wrong_changes += 1
+
+
+			if (i == destx and j == desty):
+				break
+			
+			a += asign
+			b += bsign
+
+		return max_len, wrong_changes, correct_changes
+
+	def get_best_row_state(self, move, current_player, m):
+		marker_val = 1 if (current_player == 0) else -1
+		ring_val = 2 * marker_val 
+
+		rows = self.rows
+		rings = self.rings
+		ringx, ringy, destx, desty = move
+		asign = self.sign(destx-ringx)
+		bsign = self.sign(desty-ringy)
+		positions = list(self.driver.execute_script('return positions;'))
+		# print('Positions before', file=sys.stderr)
+		max_len_b, w_b, r_b = self.get_max_length_created(positions, rows, rings, marker_val, ring_val, ringx, ringy, destx, desty, asign, bsign, m)
+		positions_after = self.updatePositions(copy.deepcopy(positions), move, current_player)
+		# print('postions after', file=sys.stderr)
+		max_len, wrong, right = self.get_max_length_created(positions_after, rows, rings, marker_val, ring_val, ringx, ringy, destx, desty, asign, bsign, m)
+
+		# print('Move %s %s'%(str(m[(ringx, ringy)]), str(m[(destx, desty)])), file=sys.stderr)
+		# print('Max len : %d, max len b : %d'%(max_len, max_len_b), file=sys.stderr)
+
+		if(max_len < max_len_b):
+			max_len = -1
+				
+		return max_len, right-wrong
+
+	def get_opponent_worst_state(self, move, current_player, m):
+		opp_marker = -1 if (current_player == 0) else 1
+		opp_ring = 2 * opp_marker
+
+		rows = self.rows
+		rings = self.rings
+		ringx, ringy, destx, desty = move
+		asign = self.sign(destx-ringx)
+		bsign = self.sign(desty-ringy)
+
+		positions = list(self.driver.execute_script('return positions;'))
+		# print('Positions before', file=sys.stderr)
+		max_len_b, w_b, r_b = self.get_max_length_created(positions, rows, rings, opp_marker, opp_ring, ringx, ringy, destx, desty, asign, bsign, m)
+
+		positions_after = self.updatePositions(copy.deepcopy(positions), move, current_player)
+		# print('postions after', file=sys.stderr)
+		max_len, wrong, right = self.get_max_length_created(positions_after, rows, rings, opp_marker, opp_ring, ringx, ringy, destx, desty, asign, bsign, m)
+
+		# print('Move %s %s'%(str(m[(ringx, ringy)]), str(m[(destx, desty)])), file=sys.stderr)
+		# print('Max len : %d, max len b : %d'%(max_len, max_len_b), file=sys.stderr)
+
+		if(max_len > max_len_b):
+			max_len = rings * 2
+		
+		return max_len-max_len_b, max_len_b, wrong-right # changes to our markers are good
+
 	'''
 	## New suggested move types
 	# P - Place a ring
@@ -220,68 +442,17 @@ class Game:
 			success = 0
 		elif(won == True):
 			success = 2
-
 		return success
 
-if __name__ == "__main__":
-	game = Game(5, 'GUI')
-	game.execute_move("P 0 0")
-	game.execute_move("P 5 26")
-	game.execute_move("P 4 13")
-	game.execute_move("P 5 19")
-	game.execute_move("P 3 1")
-	game.execute_move("P 1 2")
-	game.execute_move("P 4 5")
-	game.execute_move("P 5 21")
-	game.execute_move("P 3 5")
-	game.execute_move("P 1 4")
-	game.execute_move("S 3 5 M 2 5")
-	game.execute_move("S 5 21 M 3 13")
-	game.execute_move("S 2 5 M 2 4")
-	game.execute_move("S 5 19 M 4 15")
-	game.execute_move("S 0 0 M 2 2")
-	game.execute_move("S 4 15 M 4 14")
-	game.execute_move("S 2 4 M 2 3")
-	game.execute_move("S 3 13 M 2 9")
-	game.execute_move("S 2 2 M 4 22")
-	game.execute_move("S 4 14 M 5 17")
-	game.execute_move("S 4 5 M 4 4")
-	game.execute_move("S 5 26 M 1 1")
-	game.execute_move("S 2 3 M 3 2")
-	game.execute_move("S 1 4 M 2 7")
-	game.execute_move("S 3 1 M 3 14")
-	game.execute_move("S 2 9 M 1 5")
-	game.execute_move("S 4 13 M 3 8")
-	game.execute_move("S 1 1 M 4 21")
-	game.execute_move("S 3 14 M 1 3")
-	game.execute_move("S 5 17 M 3 9")
-	game.execute_move("S 3 8 M 5 8")
-	game.execute_move("S 4 21 M 1 0")
-	game.execute_move("S 4 22 M 2 8")
-	game.execute_move("S 1 5 M 4 17")
-	game.execute_move("S 2 8 M 3 12")
-	game.execute_move("S 1 2 M 2 1")
-	game.execute_move("S 3 2 M 3 7 RS 2 8 RE 2 2 X 3 7")
-	game.execute_move("S 2 1 M 3 4")
-	game.execute_move("S 1 3 M 0 0")
-	game.execute_move("S 1 0 M 1 1")
-	game.execute_move("S 3 12 M 1 4")
-	game.execute_move("S 3 4 M 2 2")
-	game.execute_move("S 5 8 M 5 9")
-	game.execute_move("S 1 1 M 4 11")
-	game.execute_move("S 0 0 M 2 6")
-	game.execute_move("S 4 17 M 4 16")
-	game.execute_move("S 2 6 M 2 0")
-	game.execute_move("S 2 7 M 3 11")
-	game.execute_move("S 2 0 M 2 11")
-	game.execute_move("S 3 11 M 2 10")
-	game.execute_move("S 2 11 M 3 16")
-	game.execute_move("S 2 2 M 3 7")
-	game.execute_move("S 4 4 M 5 6")
-	game.execute_move("S 4 11 M 4 12")
-	game.execute_move("S 3 16 M 3 17")
-	### Enter Game Moves Here to Test
-	## Example: game.execute_move("P 2 0")
-	
+	def simulate(self, filename):
+		with open(filename) as f:
+			for line in f.readlines():
+				parts = line.split('}')
+				part = parts[0] + '}'
+				out = json.loads(part)
+				exec("self.execute_move(\"" + out['data'] + "\")")
 
+if __name__ == "__main__":
+	game = Game(6, 5, 'GUI')
+	game.simulate(sys.argv[1])
 
