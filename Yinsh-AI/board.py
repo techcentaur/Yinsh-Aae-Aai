@@ -470,17 +470,30 @@ class Board:
 		p1 = 0; p1_row = 0
 		p2 = 0; p2_row = 0
 
-		_amount = 2
-
 		for each_line in total_lines:
 			for each_point in each_line:
 				if self.state[self.points_inverse[each_point]] is 'WM':
 					p1 = p1 + 1
-					p2_row = p2_row + _amount*(p2+p2)
+					if p2<3:
+						p2_row = p2_row + p2*p2
+					elif p2==3:
+						p2_row = p2_row + p2*p2*5
+					elif p2==4:
+						p2_row = p2_row + p2*p2*10
+					elif p2==5:
+						p2_row = p2_row + p2*p2*20
+
 					p2 = 0
 				elif self.state[self.points_inverse[each_point]] is 'BM':
 					p2 = p2 + 1
-					p1_row = p1_row + _amount*(p1+p1)
+					if p1<3:
+						p1_row = p1_row + p1*p1
+					elif p1==3:
+						p1_row = p1_row + p1*p1*5
+					elif p1==4:
+						p1_row = p1_row + p1*p1*10
+					elif p1==5:
+						p1_row = p1_row + p1*p1*20
 					p1 = 0
 				else:
 					p1_row = p1_row + (p1+p1)
@@ -488,8 +501,8 @@ class Board:
 					p1 = 0
 					p2 = 0
 
-		player1_score = _amount*2*p1_mark + p1_row + 100*(self.size-len(self.rings[0]))
-		player2_score = _amount*2*p2_mark + p2_row + 100*(self.size-len(self.rings[1]))
+		player1_score = 10*p1_mark + p1_row
+		player2_score = 10*p2_mark + p2_row
 
 		if self.player:
 			score = player1_score - player2_score

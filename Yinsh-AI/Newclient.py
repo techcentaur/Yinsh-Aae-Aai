@@ -19,8 +19,10 @@ class RandomPlayer:
         self.game = Game(self.n, self.seq)
         self.RingPos = {}
         self.board = board.Board(player=self.player+1, size=self.n, row_length=self.seq)
-
-        self.algo = algo.Algo()
+        if self.n==6 and self.seq==12:
+            self.algo = algo.SecretAlgo()
+        else:
+            self.algo = algo.Algo()
         self.play()
 
     def placeRing(self):
@@ -49,46 +51,44 @@ class RandomPlayer:
                     self.board.state[(int(move_split[1]),int(move_split[2]))] = 'BR'
                 self.board.rings[int(not bool(self.player))].append((int(move_split[1]),int(move_split[2])))
 
-        # ring_placement_counter = 0
+        ring_placement_counter = 0
         while True: # Keep playing moves till game is over
             move_seq = []
 
             while True: # Loop till valid move sequence is found
                 state = self.game.check_player_state()
                 if state == 0: ## Place Rings
-                    # if self.n == 6 and self.seq == 5:
-                    #     self.RingPos[ring_placement_counter] = (6, (ring_placement_counter*6)+1)
-                    #     self.board.rings[self.player].append((6, (ring_placement_counter*6)+1))
-                    #     if self.player == 1:
-                    #         self.board.state[(6, (ring_placement_counter*6)+1)] = 'BR'
-                    #     else:
-                    #         self.board.state[(6, (ring_placement_counter*6)+1)] = 'WR'
-                    #     move_str = "P 6 "+ str(ring_placement_counter*6+1)
-                    #     move_seq.append(move_str)
-                    #     with open('file.txt', 'a') as f:
-                    #         f.write(move_str)
-                    #     ring_placement_counter+=1
-                    #     break
-
-                    # else:    
-                    moveP, i, hex, pos = self.placeRing()
-                    success = self.game.execute_move(moveP)
-
-                    if success != 0:
-                        self.RingPos[i] = (hex, pos)
-                        self.board.rings[self.player].append((hex, pos))
+                    if self.n == 6 and self.seq == 12:
+                        self.RingPos[ring_placement_counter] = (6, (ring_placement_counter*6)+1)
+                        self.board.rings[self.player].append((6, (ring_placement_counter*6)+1))
                         if self.player == 1:
-                            self.board.state[(hex, pos)] = 'BR'
+                            self.board.state[(6, (ring_placement_counter*6)+1)] = 'BR'
                         else:
-                            self.board.state[(hex, pos)] = 'WR'
-                        move_seq.append(moveP)
+                            self.board.state[(6, (ring_placement_counter*6)+1)] = 'WR'
+                        move_str = "P 6 "+ str(ring_placement_counter*6+1)
+                        move_seq.append(move_str)
+                        ring_placement_counter+=1
                         break
 
+                    else:    
+                        moveP, i, hex, pos = self.placeRing()
+                        success = self.game.execute_move(moveP)
+
+                        if success != 0:
+                            self.RingPos[i] = (hex, pos)
+                            self.board.rings[self.player].append((hex, pos))
+                            if self.player == 1:
+                                self.board.state[(hex, pos)] = 'BR'
+                            else:
+                                self.board.state[(hex, pos)] = 'WR'
+                            move_seq.append(moveP)
+                            break
+
                 elif state == 1: ## Select a Ring and the Move to Valid Postion
-                    # if self.n == 6 and self.seq == 5:
-                    #     brd = self.algo.algorithm(self.board)
-                    # else:
-                    brd = self.algo.min_max(self.board)
+                    if self.n == 6 and self.seq == 12:
+                        brd = self.algo.algorithm(self.board)
+                    else:
+                        brd = self.algo.min_max(self.board)
                     
                     brd.player = self.board.player
                     self.board = brd

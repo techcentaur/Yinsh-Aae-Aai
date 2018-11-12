@@ -4,7 +4,7 @@ from board import Board
 
 class Algo:
 	def __init__(self):
-		self.depth = 2
+		self.depth = 1
 
 	def print_alp_bet(self, alp, bet):
 		print("alpha: ", alp, ":: beta: ", bet)
@@ -70,63 +70,67 @@ class Algo:
 # 	b.display_board()
 # 	a = Algo().min_max(b)
 # 	# a.display_board()
-# 	# print(a.reach_neighbs_moves)
+# # 	# print(a.reach_neighbs_moves)
 
-class SecretAlgo:
-	def __init__(self, board):
-		self.counter = 0
-		self.rings = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
+# class SecretAlgo:
+# 	def __init__(self):
+# 		self.counter = 0
+# 		self.rings = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
 
-	def algorithm(self, board):
-		if not self.counter:
-			for ring in rings:
-				ring_number = ring[0]
-				score = 0
-				for i in range(1, 5):
-					if board.state[(6, (ring_number*6)+i)] in ['WM', 'BM']:
-						score = score + 1
-				if (board.player and board.state[(6, (ring_number*6)+5)] == 'BM') or (not board.player and board.state[(6, (ring_number*6)+5)] == 'WM'):
-					score = score - 10
-				for i in range(1, 6):
-					if (board.player and board.state[(6, (ring_number*6)+i)] == 'BR') or (not board.player and board.state[(6, (ring_number*6)+i)] == 'WR'):
-						score = score - 10
-			self.rings = sorted(self.rings, key=lambda k: k[1])
+# 	def algorithm(self, board):
+# 		if not self.counter:
+# 			for ring in rings:
+# 				ring_number = ring[0]
+# 				score = 0
+# 				for i in range(1, 5):
+# 					if board.state[(6, (ring_number*6)+i)] in ['WM', 'BM']:
+# 						score = score + 1
+# 				if (board.player and board.state[(6, (ring_number*6)+5)] == 'BM') or (not board.player and board.state[(6, (ring_number*6)+5)] == 'WM'):
+# 					score = score - 10
+# 				for i in range(1, 6):
+# 					if (board.player and board.state[(6, (ring_number*6)+i)] == 'BR') or (not board.player and board.state[(6, (ring_number*6)+i)] == 'WR'):
+# 						score = score - 10
+# 			self.rings = sorted(self.rings, key=lambda k: k[1])
 
-		to_play = self.rings[self.counter][0]
-		self.counter = (self.counter + 1) % 3
-		ring_location = 0
-		for i in range(1, 6):
-			if (board.player and board.state[(6, (to_play*6)+i)] == 'WR') or (not board.player and board.state[(6, (to_play*6)+i)] == 'BR'):
-				ring_location = i
-				break
+# 		to_play = self.rings[self.counter][0]
+# 		self.counter = (self.counter + 1) % 3
+# 		ring_location = 0
+# 		for i in range(1, 6):
+# 			if (board.player and board.state[(6, (to_play*6)+i)] == 'WR') or (not board.player and board.state[(6, (to_play*6)+i)] == 'BR'):
+# 				ring_location = i
+# 				break
 
-		to_flip = []
-		if ring_location is 5:
-			algo = Algo()
-			return algo.min_max(board)
+# 		to_flip = []
+# 		if ring_location is 5:
+# 			algo = Algo()
+# 			return algo.min_max(board)
 
-		for i in range(1, 6-ring_location):
-			if board.state[(6, (to_play*6)+i)] == 'E':
-				new_board = Board(board.player, 6, 5)
-				new_board.state = board.state.copy()
-				if to_flip:
-					for marker in to_flip:
-						if board.player:
-							new_board.state[marker] = 'BM'
-						if not board.player:
-							new_board.state[marker] = 'WM'
-				if board.player:
-					new_board.state[(6, (to_play*6)+ring_location)] = 'BM'
-					new_board.state[(6, (to_play*6)+i)] = 'BR'
-				else:
-					new_board.state[(6, (to_play*6)+ring_location)] = 'WM'
-					new_board.state[(6, (to_play*6)+i)] = 'WR'
-				return new_board
-			if board.state[(6, (to_play*6)+i)] == 'WM' and board.player:
-				to_flip.append((6, (to_play*6)+i))
-			if board.state[(6, (to_play*6)+i)] == 'BM' and not board.player:
-				to_flip.append((6, (to_play*6)+i))
+# 		for i in range(1, 6-ring_location):
+# 			if board.state[(6, (to_play*6)+i)] == 'E':
+# 				new_board = Board(board.player, 6, 5)
+# 				new_board.state = board.state.copy()
+# 				if to_flip:
+# 					for marker in to_flip:
+# 						if board.player:
+# 							new_board.state[marker] = 'BM'
+# 						if not board.player:
+# 							new_board.state[marker] = 'WM'
+# 				if board.player:
+# 					new_board.state[(6, (to_play*6)+ring_location)] = 'BM'
+# 					new_board.state[(6, (to_play*6)+i)] = 'BR'
+# 				else:
+# 					new_board.state[(6, (to_play*6)+ring_location)] = 'WM'
+# 					new_board.state[(6, (to_play*6)+i)] = 'WR'
+
+# 				new_board.reach_neighbs_moves += new_board.get_move_string("S", (6,(to_play*6)+ring_location))
+# 				new_board.reach_neighbs_moves += self.get_move_string("M", (6,(to_play*6)+i))
+
+# 				return new_board
+# 			if board.state[(6, (to_play*6)+i)] == 'WM' and board.player:
+# 				to_flip.append((6, (to_play*6)+i))
+# 			if board.state[(6, (to_play*6)+i)] == 'BM' and not board.player:
+# 				to_flip.append((6, (to_play*6)+i))
 		
-		algo = Algo()
-		return algo.min_max(board)
-		
+# 		algo = Algo()
+# 		return algo.min_max(board)
+# 		
